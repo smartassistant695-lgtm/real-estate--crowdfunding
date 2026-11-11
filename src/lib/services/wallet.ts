@@ -1,5 +1,5 @@
 import "server-only";
-import { claimIdempotencyKey, DomainError, lockWallets, runTx, storeIdempotentResult } from "@/lib/db";
+import { claimIdempotencyKey, DomainError, lockWallets, prisma, runTx, storeIdempotentResult, type Tx } from "@/lib/db";
 import { formatCents } from "@/lib/domain/money";
 import { providers } from "@/lib/providers";
 import { audit } from "./audit";
@@ -71,7 +71,7 @@ export async function adjust(input: { actorId: string; userId: string; amountCen
  * Cash a user has put into buying shares in the current calendar year (UTC), net of refunds.
  * Read from the ledger, so it cannot drift from what actually happened.
  */
-export async function investedThisYear(tx: Parameters<Parameters<typeof runTx>[0]>[0], userId: string, now = new Date()): Promise<bigint> {
+export async function investedThisYear(tx: Tx | typeof prisma, userId: string, now = new Date()): Promise<bigint> {
   const from = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
   const sum = await tx.ledgerEntry.aggregate({
     where: { userId, account: "USER_WALLET", type: { in: ["PRIMARY_PURCHASE", "TRADE_BUY", "REFUND"] }, createdAt: { gte: from } },

@@ -181,16 +181,19 @@ export function Facts({ rows, className }: { rows: { label: ReactNode; value: Re
   );
 }
 
-export function Money({ cents, sign, className }: { cents: bigint; sign?: boolean; className?: string }) {
-  // Kept here so gains/losses are coloured the same way everywhere.
-  const tone = sign ? (cents > 0n ? "text-gain" : cents < 0n ? "text-loss" : "") : "";
+/**
+ * `sign` shows + / −. `gainLoss` also colours it, and is ONLY for gains and losses: money simply
+ * entering or leaving an account (a purchase, a deposit) is not a loss and stays in ink.
+ */
+export function Money({ cents, sign, gainLoss, className }: { cents: bigint; sign?: boolean; gainLoss?: boolean; className?: string }) {
+  const tone = gainLoss ? (cents > 0n ? "text-gain" : cents < 0n ? "text-loss" : "") : "";
   const neg = cents < 0n;
   const abs = neg ? -cents : cents;
   const dollars = (abs / 100n).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   const c = (abs % 100n).toString().padStart(2, "0");
   return (
     <span className={cn("num", tone, className)}>
-      {neg ? "−" : sign && cents > 0n ? "+" : ""}${dollars}.{c}
+      {neg ? "−" : (sign || gainLoss) && cents > 0n ? "+" : ""}${dollars}.{c}
     </span>
   );
 }
