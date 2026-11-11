@@ -94,7 +94,7 @@ export async function approveDistribution(input: { actorId: string; distribution
 }
 
 /** Pay an APPROVED distribution into wallets. Nothing is ever paid without the approval step. */
-export async function payDistribution(input: { actorId: string; distributionId: string; idempotencyKey: string; ipAddress?: string | null }) {
+export async function payDistribution(input: { actorId: string; distributionId: string; idempotencyKey: string; ipAddress?: string | null; now?: Date }) {
   let afterCommit: (() => Promise<void>) | undefined;
   const result = await runTx(async (tx) => {
     const replay = await claimIdempotencyKey(tx, input.idempotencyKey, input.actorId, "payDistribution");
@@ -111,7 +111,7 @@ export async function payDistribution(input: { actorId: string; distributionId: 
     const paidTotal = dist.payments.reduce((a, p) => a + p.amountCents, 0n);
     if (paidTotal !== dist.distributedCents) throw new Error("Distribution payments do not sum to the distributed total");
 
-    const now = new Date();
+    const now = input.now ?? new Date();
     const label = monthLabel(dist.month);
     const income = dist.netIncomeCents > 0n ? dist.netIncomeCents : 0n;
     const lines: LedgerLine[] = [
