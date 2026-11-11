@@ -39,14 +39,18 @@ export function quoteBuyback(input: {
   usedThisMonthCents: bigint;
   reserveBalanceCents: bigint;
 }): BuybackQuote {
+  const none = { priceCents: 0n, budgetCents: 0n, maxUnits: 0n, proceedsCents: 0n, ok: false, reason: "NO_BUDGET" } as const;
+  if (!Number.isInteger(input.discountBps) || input.discountBps < 0 || input.discountBps > 10_000 || input.units < 0n || input.navPerShareCents < 0n) return none;
   const priceCents = buybackPrice(input.navPerShareCents, input.discountBps);
   const capLeft = input.monthlyCapCents > input.usedThisMonthCents ? input.monthlyCapCents - input.usedThisMonthCents : 0n;
-  const budgetCents = capLeft < input.reserveBalanceCents ? capLeft : input.reserveBalanceCents;
-  const maxUnits = priceCents > 0n ? mulDivFloor(budgetCents, UNITS_PER_SHARE, priceCents) : 0n;
+  const smaller = capLeft < input.reserveBalanceCents ? capLeft : input.reserveBalanceCents;
+  const budgetCents = smaller > 0n ? smaller : 0n;
+  if (budgetCents <= 0n || priceCents <= 0n) return { ...none, priceCents, budgetCents };
+  const maxUnits = mulDivFloor(budgetCents, UNITS_PER_SHARE, priceCents);
   const proceedsCents = tradeNotional(input.units, priceCents);
-  if (budgetCents <= 0n || priceCents <= 0n) return { priceCents, budgetCents, maxUnits, proceedsCents, ok: false, reason: "NO_BUDGET" };
   if (proceedsCents <= 0n) return { priceCents, budgetCents, maxUnits, proceedsCents, ok: false, reason: "TOO_SMALL" };
-  if (proceedsCents > budgetCents) return { priceCents, budgetCents, maxUnits, proceedsCents, ok: false, reason: "EXCEEDS_BUDGET" };
+  // Compare units, not rounded-down proceeds, so a seller never hands over a sliver of shares for nothing.
+  if (input.units > maxUnits) return { priceCents, budgetCents, maxUnits, proceedsCents, ok: false, reason: "EXCEEDS_BUDGET" };
   return { priceCents, budgetCents, maxUnits, proceedsCents, ok: true };
 }
 

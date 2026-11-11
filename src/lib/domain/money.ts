@@ -105,16 +105,19 @@ export function allocateLargestRemainder(total: bigint, weights: readonly bigint
 
 /** "1,234.56" or "$26" → 123456n / 2600n. Returns null for anything malformed or negative. */
 export function parseDollarsToCents(input: string): bigint | null {
-  const s = input.trim().replace(/^\$/, "").replace(/,/g, "");
-  if (!/^\d{1,12}(\.\d{1,2})?$/.test(s)) return null;
+  const raw = input.trim().replace(/^\$/, "");
+  // Commas are accepted only as thousands separators ("1,234.56"), never as a decimal mark ("1,50").
+  if (!/^(\d{1,3}(,\d{3}){1,3}|\d{1,12})(\.\d{1,2})?$/.test(raw)) return null;
+  const s = raw.replace(/,/g, "");
   const [whole = "0", frac = ""] = s.split(".");
   return BigInt(whole) * 100n + BigInt(frac.padEnd(2, "0"));
 }
 
 /** "2.5" shares → 2_500_000n units. Up to six decimals. */
 export function parseSharesToUnits(input: string): bigint | null {
-  const s = input.trim().replace(/,/g, "");
-  if (!/^\d{1,9}(\.\d{1,6})?$/.test(s)) return null;
+  const raw = input.trim();
+  if (!/^(\d{1,3}(,\d{3}){1,2}|\d{1,9})(\.\d{1,6})?$/.test(raw)) return null;
+  const s = raw.replace(/,/g, "");
   const [whole = "0", frac = ""] = s.split(".");
   return BigInt(whole) * UNITS_PER_SHARE + BigInt(frac.padEnd(6, "0"));
 }
@@ -124,7 +127,8 @@ export function parsePercentToBps(input: string): number | null {
   const s = input.trim().replace(/%$/, "");
   if (!/^\d{1,3}(\.\d{1,2})?$/.test(s)) return null;
   const [whole = "0", frac = ""] = s.split(".");
-  return Number(whole) * 100 + Number(frac.padEnd(2, "0"));
+  const bps = Number(whole) * 100 + Number(frac.padEnd(2, "0"));
+  return bps > 10_000 ? null : bps; // nothing above 100% is a valid rate here
 }
 
 // ---------- formatting ----------
@@ -148,7 +152,7 @@ export function formatCentsWhole(cents: bigint): string {
   const neg = cents < 0n;
   const abs = neg ? -cents : cents;
   const rounded = (abs + 50n) / 100n;
-  return `${neg ? "−" : ""}$${group(rounded.toString())}`;
+  return `${neg && rounded > 0n ? "−" : ""}$${group(rounded.toString())}`;
 }
 
 /** 2_500_000n → "2.5"; trims trailing zeros, keeps up to `maxDecimals` (truncating). */
@@ -178,7 +182,8 @@ export function ratioBps(a: bigint, b: bigint): number {
 
 /** Cents → plain decimal string for form inputs: 2600n → "26.00". */
 export function centsToInput(cents: bigint): string {
-  return `${cents / 100n}.${(cents % 100n).toString().padStart(2, "0")}`;
+  const abs = cents < 0n ? -cents : cents;
+  return `${cents < 0n ? "-" : ""}${abs / 100n}.${(abs % 100n).toString().padStart(2, "0")}`;
 }
 
 /** For charts only. Never feed the result back into money math. */

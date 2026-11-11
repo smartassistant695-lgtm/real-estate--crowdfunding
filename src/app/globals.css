@@ -1,0 +1,136 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens. The default Tailwind palette, type scale, radii and shadows are removed
+ * (`initial`) so nothing in the UI can reach for a stock colour by accident.
+ */
+@theme {
+  --color-*: initial;
+  --color-paper: #f6f3ee; /* page background: warm off-white */
+  --color-paper-deep: #ece7de; /* sunk areas, table headers */
+  --color-card: #fbfaf7; /* raised surfaces */
+  --color-ink: #1c1b19; /* text */
+  --color-ink-soft: #45423d; /* secondary text */
+  --color-stone: #6a655c; /* tertiary text, labels (4.9:1 on paper) */
+  --color-rule: #d8d2c6; /* hairlines */
+  --color-rule-strong: #1c1b19;
+  --color-accent: #1f4d3a; /* the one brand colour: deep green */
+  --color-accent-deep: #163a2b;
+  --color-accent-wash: #e2eae4;
+  --color-on-accent: #f6f3ee;
+  --color-gain: #2c6548; /* used only for gains */
+  --color-loss: #9a3b26; /* used only for losses and errors */
+  --color-loss-wash: #f4e4de;
+  --color-notice: #7a5a12; /* draft / caution text */
+  --color-notice-wash: #f3ead0;
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+
+  --font-*: initial;
+  --font-serif: var(--font-fraunces), "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  --font-sans: var(--font-plex), "Helvetica Neue", Arial, sans-serif;
+
+  --text-*: initial;
+  --text-micro: 0.6875rem;
+  --text-micro--line-height: 1rem;
+  --text-xs: 0.75rem;
+  --text-xs--line-height: 1.125rem;
+  --text-sm: 0.875rem;
+  --text-sm--line-height: 1.375rem;
+  --text-base: 1rem;
+  --text-base--line-height: 1.625rem;
+  --text-md: 1.125rem;
+  --text-md--line-height: 1.75rem;
+  --text-lg: 1.375rem;
+  --text-lg--line-height: 1.875rem;
+  --text-xl: 1.75rem;
+  --text-xl--line-height: 2.125rem;
+  --text-2xl: 2.25rem;
+  --text-2xl--line-height: 2.5rem;
+  --text-3xl: 3rem;
+  --text-3xl--line-height: 3.125rem;
+  --text-4xl: 4rem;
+  --text-4xl--line-height: 4rem;
+  --text-5xl: 5.5rem;
+  --text-5xl--line-height: 5.25rem;
+
+  --radius-*: initial;
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-full: 9999px;
+
+  --shadow-*: initial;
+  --shadow-pop: 0 1px 0 rgb(28 27 25 / 0.04), 0 12px 32px -12px rgb(28 27 25 / 0.22);
+
+  --container-prose: 40rem;
+  --container-page: 78rem;
+
+  --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+}
+
+@layer base {
+  html { background: var(--color-paper); color: var(--color-ink); -webkit-text-size-adjust: 100%; }
+  body {
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+    line-height: var(--text-base--line-height);
+    font-feature-settings: "ss01";
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3 { font-family: var(--font-serif); font-weight: 400; letter-spacing: -0.015em; text-wrap: balance; }
+  p { text-wrap: pretty; }
+  ::selection { background: var(--color-accent); color: var(--color-on-accent); }
+  :focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; border-radius: 1px; }
+  a { text-underline-offset: 3px; text-decoration-thickness: 1px; }
+  table { border-collapse: collapse; }
+  dialog { margin: auto; }
+  dialog::backdrop { background: rgb(28 27 25 / 0.45); }
+}
+
+@layer components {
+  /* Small-caps label: the workhorse of the system. */
+  .label {
+    font-family: var(--font-sans);
+    font-size: var(--text-micro);
+    line-height: 1rem;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--color-stone);
+  }
+  /* Every financial figure. */
+  .num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum", "lnum"; }
+  .link { text-decoration: underline; text-decoration-color: var(--color-rule); }
+  .link:hover { text-decoration-color: currentColor; }
+  .prose-plain > * + * { margin-top: 1em; }
+  .prose-plain h2 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); margin-top: 2em; }
+  .prose-plain h3 { font-family: var(--font-sans); font-weight: 600; font-size: var(--text-base); letter-spacing: 0; margin-top: 1.5em; }
+  .prose-plain ul { list-style: none; }
+  .prose-plain ul > li { position: relative; padding-left: 1.25em; }
+  .prose-plain ul > li + li { margin-top: 0.4em; }
+  .prose-plain ul > li::before { content: "–"; position: absolute; left: 0; color: var(--color-stone); }
+  .prose-plain ol { list-style: decimal; padding-left: 1.25em; }
+  .prose-plain strong { font-weight: 600; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  html, body { background: #fff; }
+  @page { margin: 18mm 16mm; }
+}

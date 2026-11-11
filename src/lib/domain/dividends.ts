@@ -45,6 +45,9 @@ export function planDistribution(input: {
   const outstandingUnits = holders.reduce((a, h) => a + h.units, 0n);
   const carryInCents = input.carryInCents;
   if (carryInCents < 0n) throw new RangeError("Carry-in cannot be negative");
+  if (!Number.isInteger(input.reserveBps) || input.reserveBps < 0 || input.reserveBps > 10_000) {
+    throw new RangeError("Reserve allocation must be between 0% and 100%");
+  }
 
   const empty = (pool: bigint, reserve: bigint): DistributionPlan => ({
     netIncomeCents: input.netIncomeCents,
