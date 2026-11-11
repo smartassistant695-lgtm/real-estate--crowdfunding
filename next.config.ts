@@ -10,9 +10,11 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  agentRules: false,
   images: {
+    loader: "custom",
+    loaderFile: "./src/lib/image-loader.ts",
     remotePatterns: [{ protocol: "https", hostname: "images.unsplash.com" }],
-    formats: ["image/avif", "image/webp"],
   },
   // The Content-Security-Policy (with a per-request nonce) is set in src/proxy.ts.
   async headers() {

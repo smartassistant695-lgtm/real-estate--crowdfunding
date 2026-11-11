@@ -170,7 +170,9 @@ export function formatBps(bps: number | bigint, opts: { sign?: boolean; decimals
   const n = Number(bps);
   const d = opts.decimals ?? 2;
   const abs = Math.abs(n) / 100;
-  const body = `${abs.toFixed(d).replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "")}%`;
+  // An explicit `decimals` is kept as-is ("5.0%") so columns of figures line up; the default trims.
+  const fixed = abs.toFixed(d);
+  const body = `${opts.decimals === undefined ? fixed.replace(/(\.\d*?)0+$/, "$1").replace(/\.$/, "") : fixed}%`;
   return `${n < 0 ? "−" : opts.sign && n > 0 ? "+" : ""}${body}`;
 }
 
