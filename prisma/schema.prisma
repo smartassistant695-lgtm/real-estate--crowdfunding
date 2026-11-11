@@ -1,0 +1,640 @@
+// Money: BigInt cents. Shares: BigInt micro-shares (1 share = 1,000,000 units).
+// Basis points (bps): Int, 10,000 = 100%.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  INVESTOR
+  ADMIN
+}
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PropertyType {
+  SINGLE_FAMILY
+  DUPLEX
+  TOWNHOME
+  SMALL_MULTIFAMILY
+}
+
+enum PropertyStatus {
+  COMING_SOON
+  FUNDING
+  FUNDED
+  TRADING
+  EXIT_VOTE
+  SOLD
+  CANCELLED
+}
+
+enum LedgerType {
+  DEPOSIT
+  WITHDRAWAL
+  PRIMARY_PURCHASE
+  TRADE_BUY
+  TRADE_SELL
+  DIVIDEND
+  BUYBACK_SALE
+  FEE
+  ADJUSTMENT
+  REFUND
+  RESERVE_ALLOCATION
+  EXIT_PROCEEDS
+}
+
+// Which book an entry sits in. Every money movement is written as a balanced
+// pair (or set) of entries sharing a referenceId, so the whole ledger sums to zero.
+enum LedgerAccount {
+  USER_WALLET // a user's cash (userId set)
+  EXTERNAL // the outside world: bank transfers in/out, rent collected, sale proceeds
+  PROPERTY_ESCROW // offering proceeds held for a property
+  PROPERTY_OPERATING // a property's net income awaiting distribution, incl. rounding carry
+  LIQUIDITY_RESERVE // a property's buyback reserve
+  PLATFORM // platform fees (zero in the demo)
+}
+
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderStatus {
+  OPEN
+  PARTIALLY_FILLED
+  FILLED
+  CANCELLED
+  EXPIRED
+}
+
+enum WindowStatus {
+  SCHEDULED
+  OPEN
+  CLOSED
+}
+
+enum DistributionStatus {
+  DRAFT
+  APPROVED
+  PAID
+}
+
+enum ProposalType {
+  SELL_PROPERTY
+  REFINANCE
+  MAJOR_RENOVATION
+  CHANGE_MANAGER
+  EXTEND_EXIT_DATE
+}
+
+enum ProposalStatus {
+  DRAFT
+  OPEN
+  PASSED
+  FAILED
+  NO_QUORUM
+}
+
+enum VoteChoice {
+  FOR
+  AGAINST
+  ABSTAIN
+}
+
+enum DocumentCategory {
+  OFFERING_CIRCULAR
+  OPERATING_AGREEMENT
+  APPRAISAL
+  INSPECTION
+  FINANCIAL_STATEMENT
+  TAX_FORM
+}
+
+enum LotSource {
+  PRIMARY
+  TRADE
+}
+
+model User {
+  id                          String    @id @default(cuid())
+  email                       String    @unique
+  passwordHash                String
+  name                        String    @default("")
+  state                       String?
+  dateOfBirth                 DateTime? @db.Date
+  role                        Role      @default(INVESTOR)
+  kycStatus                   KycStatus @default(NOT_STARTED)
+  kycReference                String?
+  kycSubmittedAt              DateTime?
+  annualInvestmentLimitCents  BigInt
+  riskDisclosureAcceptedAt    DateTime?
+  tradingDisclosureAcceptedAt DateTime?
+  fundedAt                    DateTime?
+  onboardingCompletedAt       DateTime?
+  createdAt                   DateTime  @default(now())
+  updatedAt                   DateTime  @updatedAt
+
+  wallet           Wallet?
+  ledgerEntries    LedgerEntry[]
+  holdings         Holding[]
+  lots             HoldingLot[]
+  primaryPurchases PrimaryPurchase[]
+  orders           Order[]
+  dividendPayments DividendPayment[]
+  votes            Vote[]
+  notifications    Notification[]
+  snapshots        PortfolioSnapshot[]
+  resetTokens      PasswordResetToken[]
+  exitPayouts      ExitPayout[]
+  proposals        Proposal[]
+
+  @@index([role])
+  @@index([kycStatus])
+}
+
+model PasswordResetToken {
+  id        String    @id @default(cuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Wallet {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  availableCents BigInt   @default(0)
+  heldCents      BigInt   @default(0) // reserved for open buy orders
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Append-only. A database trigger rejects UPDATE and DELETE (see migrations).
+model LedgerEntry {
+  id          String        @id @default(cuid())
+  seq         Int           @unique @default(autoincrement())
+  account     LedgerAccount
+  userId      String?
+  propertyId  String?
+  type        LedgerType
+  amountCents BigInt // signed; positive = into this account
+  shareUnits  BigInt? // signed; positive = shares received by userId
+  referenceId String // groups the entries of one event
+  memo        String
+  createdAt   DateTime      @default(now())
+  user        User?         @relation(fields: [userId], references: [id])
+  property    Property?     @relation(fields: [propertyId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([propertyId, createdAt])
+  @@index([referenceId])
+  @@index([account, propertyId])
+}
+
+model Property {
+  id                        String         @id @default(cuid())
+  sequence                  Int            @unique @default(autoincrement())
+  slug                      String         @unique
+  name                      String
+  street                    String
+  city                      String
+  state                     String
+  zip                       String
+  propertyType              PropertyType
+  bedrooms                  Int
+  bathrooms                 Float
+  squareFeet                Int
+  yearBuilt                 Int
+  description               String
+  neighborhood              String         @default("")
+  schoolsNote               String         @default("")
+  transitNote               String         @default("")
+  risks                     String[]
+  purchasePriceCents        BigInt
+  closingCostsCents         BigInt
+  reserveFundCents          BigInt
+  totalUnits                BigInt // shares offered, in micro-shares
+  soldUnits                 BigInt         @default(0) // issued in the initial offering
+  retiredUnits              BigInt         @default(0) // bought back by the reserve and retired
+  offeringPricePerShareCents BigInt
+  projectedMonthlyRentCents BigInt
+  projectedAnnualYieldBps   Int
+  lastTradePriceCents       BigInt?
+  lastTradeAt               DateTime?
+  dividendCarryCents        BigInt         @default(0) // rounding cents carried to next month
+  status                    PropertyStatus @default(COMING_SOON)
+  fundingDeadline           DateTime?
+  fundedAt                  DateTime?
+  plannedExitYear           Int
+  propertyManagerName       String
+  entityName                String
+  salePriceCents            BigInt?
+  saleCostsCents            BigInt?
+  soldAt                    DateTime?
+  createdAt                 DateTime       @default(now())
+  updatedAt                 DateTime       @updatedAt
+
+  photos           PropertyPhoto[]
+  appraisals       Appraisal[]
+  holdings         Holding[]
+  lots             HoldingLot[]
+  primaryPurchases PrimaryPurchase[]
+  orders           Order[]
+  trades           Trade[]
+  tradingWindows   TradingWindow[]
+  financials       MonthlyFinancials[]
+  distributions    DividendDistribution[]
+  reserve          LiquidityReserve?
+  proposals        Proposal[]
+  documents        Document[]
+  ledgerEntries    LedgerEntry[]
+  exitPayouts      ExitPayout[]
+
+  @@index([status])
+  @@index([state, city])
+}
+
+model PropertyPhoto {
+  id         String   @id @default(cuid())
+  propertyId String
+  url        String
+  alt        String
+  credit     String   @default("")
+  creditUrl  String   @default("")
+  position   Int
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, position])
+}
+
+model Appraisal {
+  id               String   @id @default(cuid())
+  propertyId       String
+  valueCents       BigInt
+  navPerShareCents BigInt
+  effectiveDate    DateTime @db.Date
+  source           String
+  notes            String   @default("")
+  createdAt        DateTime @default(now())
+  property         Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId, effectiveDate])
+}
+
+// Aggregate position, kept in step with the lots below.
+model Holding {
+  id            String   @id @default(cuid())
+  userId        String
+  propertyId    String
+  shareUnits    BigInt   @default(0)
+  reservedUnits BigInt   @default(0) // locked in open sell orders
+  costBasisCents BigInt  @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  user          User     @relation(fields: [userId], references: [id])
+  property      Property @relation(fields: [propertyId], references: [id])
+
+  @@unique([userId, propertyId])
+  @@index([propertyId])
+}
+
+// One row per purchase, so holding periods and cost basis are tracked per lot.
+model HoldingLot {
+  id             String    @id @default(cuid())
+  userId         String
+  propertyId     String
+  source         LotSource
+  originalUnits  BigInt
+  remainingUnits BigInt
+  costBasisCents BigInt // basis of the remaining units
+  acquiredAt     DateTime
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  user           User      @relation(fields: [userId], references: [id])
+  property       Property  @relation(fields: [propertyId], references: [id])
+
+  @@index([userId, propertyId, acquiredAt])
+}
+
+model PrimaryPurchase {
+  id         String    @id @default(cuid())
+  userId     String
+  propertyId String
+  shareUnits BigInt
+  priceCents BigInt // per share
+  totalCents BigInt
+  refundedAt DateTime?
+  createdAt  DateTime  @default(now())
+  user       User      @relation(fields: [userId], references: [id])
+  property   Property  @relation(fields: [propertyId], references: [id])
+
+  @@index([userId, createdAt])
+  @@index([propertyId])
+}
+
+model Order {
+  id              String        @id @default(cuid())
+  seq             Int           @unique @default(autoincrement()) // time priority
+  userId          String
+  propertyId      String
+  side            OrderSide
+  limitPriceCents BigInt // per share
+  shareUnits      BigInt
+  filledUnits     BigInt        @default(0)
+  heldCents       BigInt        @default(0) // cash still held for a buy order
+  status          OrderStatus   @default(OPEN)
+  windowId        String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  closedAt        DateTime?
+  user            User          @relation(fields: [userId], references: [id])
+  property        Property      @relation(fields: [propertyId], references: [id])
+  window          TradingWindow @relation(fields: [windowId], references: [id])
+  buyTrades       Trade[]       @relation("buyOrder")
+  sellTrades      Trade[]       @relation("sellOrder")
+
+  @@index([propertyId, side, status, limitPriceCents, seq])
+  @@index([userId, createdAt])
+  @@index([windowId, status])
+}
+
+model Trade {
+  id            String   @id @default(cuid())
+  propertyId    String
+  buyOrderId    String? // null for a reserve buyback
+  sellOrderId   String? // null for a reserve buyback
+  buyerId       String? // null when the reserve is the buyer
+  sellerId      String
+  isBuyback     Boolean  @default(false)
+  priceCents    BigInt // per share
+  shareUnits    BigInt
+  notionalCents BigInt
+  executedAt    DateTime @default(now())
+  property      Property @relation(fields: [propertyId], references: [id])
+  buyOrder      Order?   @relation("buyOrder", fields: [buyOrderId], references: [id])
+  sellOrder     Order?   @relation("sellOrder", fields: [sellOrderId], references: [id])
+
+  @@index([propertyId, executedAt])
+  @@index([buyerId])
+  @@index([sellerId])
+}
+
+model TradingWindow {
+  id         String       @id @default(cuid())
+  propertyId String? // null = applies to every trading property
+  opensAt    DateTime
+  closesAt   DateTime
+  status     WindowStatus @default(SCHEDULED)
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  property   Property?    @relation(fields: [propertyId], references: [id])
+  orders     Order[]
+
+  @@index([status, opensAt])
+  @@index([propertyId])
+}
+
+model MonthlyFinancials {
+  id                 String   @id @default(cuid())
+  propertyId         String
+  month              String // "YYYY-MM"
+  grossRentCents     BigInt
+  vacancyLossCents   BigInt   @default(0)
+  managementFeeCents BigInt   @default(0)
+  maintenanceCents   BigInt   @default(0)
+  taxesCents         BigInt   @default(0)
+  insuranceCents     BigInt   @default(0)
+  hoaCents           BigInt   @default(0)
+  otherExpensesCents BigInt   @default(0)
+  netIncomeCents     BigInt
+  occupancyRateBps   Int
+  notes              String   @default("")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  property           Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@unique([propertyId, month])
+}
+
+model DividendDistribution {
+  id                     String             @id @default(cuid())
+  propertyId             String
+  month                  String // "YYYY-MM"
+  recordDate             DateTime
+  netIncomeCents         BigInt
+  carryInCents           BigInt             @default(0)
+  reserveAllocationCents BigInt
+  distributedCents       BigInt // actually paid to holders
+  perShareMicroCents     BigInt // precise: millionths of a cent per whole share
+  roundingRemainderCents BigInt             @default(0) // carried to next month
+  outstandingUnits       BigInt
+  status                 DistributionStatus @default(DRAFT)
+  approvedById           String?
+  approvedAt             DateTime?
+  paidAt                 DateTime?
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  property               Property           @relation(fields: [propertyId], references: [id])
+  payments               DividendPayment[]
+
+  @@unique([propertyId, month])
+  @@index([status])
+}
+
+model DividendPayment {
+  id             String               @id @default(cuid())
+  distributionId String
+  userId         String
+  shareUnits     BigInt
+  amountCents    BigInt
+  createdAt      DateTime             @default(now())
+  distribution   DividendDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+  user           User                 @relation(fields: [userId], references: [id])
+
+  @@unique([distributionId, userId])
+  @@index([userId])
+}
+
+model LiquidityReserve {
+  id                 String   @id @default(cuid())
+  propertyId         String   @unique
+  balanceCents       BigInt   @default(0)
+  monthlyCapCents    BigInt
+  discountBps        Int
+  usedThisMonthCents BigInt   @default(0)
+  usagePeriod        String   @default("") // "YYYY-MM" that usedThisMonthCents refers to
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  property           Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+}
+
+model Proposal {
+  id                 String         @id @default(cuid())
+  propertyId         String
+  type               ProposalType
+  title              String
+  summary            String
+  details            String // markdown
+  pros               String         @default("") // markdown list, written by the manager
+  cons               String         @default("")
+  financialImpact    Json           @default("[]") // [{ label, current, proposed }]
+  isPlannedExit      Boolean        @default(false)
+  extendYears        Int? // for planned-exit votes: years added if holders vote not to sell
+  createdById        String
+  opensAt            DateTime
+  closesAt           DateTime
+  recordDate         DateTime
+  quorumBps          Int
+  passThresholdBps   Int
+  votingCapBps       Int
+  outstandingUnits   BigInt         @default(0) // at the record date, fixed when voting opens
+  forUnits           BigInt         @default(0) // final counted tallies
+  againstUnits       BigInt         @default(0)
+  abstainUnits       BigInt         @default(0)
+  closingSoonSentAt  DateTime?
+  status             ProposalStatus @default(DRAFT)
+  finalizedAt        DateTime?
+  createdAt          DateTime       @default(now())
+  updatedAt          DateTime       @updatedAt
+  property           Property       @relation(fields: [propertyId], references: [id])
+  createdBy          User           @relation(fields: [createdById], references: [id])
+  votes              Vote[]
+
+  @@index([propertyId, status])
+  @@index([status, closesAt])
+}
+
+model Vote {
+  id                String     @id @default(cuid())
+  proposalId        String
+  userId            String
+  choice            VoteChoice
+  rawShareUnits     BigInt
+  countedShareUnits BigInt
+  castAt            DateTime   @default(now())
+  proposal          Proposal   @relation(fields: [proposalId], references: [id], onDelete: Cascade)
+  user              User       @relation(fields: [userId], references: [id])
+
+  @@unique([proposalId, userId])
+}
+
+model ExitPayout {
+  id             String   @id @default(cuid())
+  propertyId     String
+  userId         String
+  shareUnits     BigInt
+  amountCents    BigInt
+  costBasisCents BigInt
+  dividendsCents BigInt
+  createdAt      DateTime @default(now())
+  property       Property @relation(fields: [propertyId], references: [id])
+  user           User     @relation(fields: [userId], references: [id])
+
+  @@unique([propertyId, userId])
+}
+
+model Document {
+  id          String           @id @default(cuid())
+  propertyId  String?
+  title       String
+  category    DocumentCategory
+  url         String
+  publishedAt DateTime         @default(now())
+  createdAt   DateTime         @default(now())
+  property    Property?        @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+
+  @@index([propertyId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, readAt, createdAt])
+}
+
+model PortfolioSnapshot {
+  id            String   @id @default(cuid())
+  userId        String
+  date          DateTime @db.Date
+  cashCents     BigInt
+  holdingsCents BigInt // at appraised value (NAV)
+  totalCents    BigInt
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+}
+
+// Single row (id = 1). Defaults mirror Section 3 of the product brief.
+model PlatformSettings {
+  id                         Int      @id @default(1)
+  minInvestmentCents         BigInt   @default(2600)
+  annualInvestmentLimitCents BigInt   @default(1000000)
+  holdingPeriodMonths        Int      @default(6)
+  tradingWindowDays          Int      @default(7) // first N days of each month
+  reserveAllocationBps       Int      @default(1000)
+  buybackDiscountBps         Int      @default(500)
+  buybackMonthlyCapCents     BigInt   @default(200000)
+  proposalQuorumBps          Int      @default(3000)
+  proposalPassThresholdBps   Int      @default(5000) // must be strictly exceeded
+  votingCapBps               Int      @default(2000)
+  circuitBreakerBps          Int      @default(2500)
+  updatedAt                  DateTime @updatedAt
+}
+
+// Append-only. A database trigger rejects UPDATE and DELETE.
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String? // null = system job
+  action     String
+  entityType String
+  entityId   String
+  before     Json?
+  after      Json?
+  ipAddress  String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId, createdAt])
+  @@index([action, createdAt])
+}
+
+model IdempotencyKey {
+  key       String   @id
+  userId    String
+  action    String
+  result    Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model RateLimit {
+  key         String   @id
+  count       Int
+  windowStart DateTime
+}
