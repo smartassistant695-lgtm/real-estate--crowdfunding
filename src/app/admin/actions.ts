@@ -20,7 +20,11 @@ import { requireAdmin } from "@/lib/session";
 const id = z.string().min(1).max(40);
 const int = (min: number, max: number, msg: string) => z.coerce.number({ error: msg }).int(msg).min(min, msg).max(max, msg);
 const date = (msg: string) => z.iso.date(msg).transform((s) => new Date(`${s}T00:00:00Z`));
-const dateTime = (msg: string) => z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, msg).transform((s) => new Date(`${s}:00Z`));
+const dateTime = (msg: string) => z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/, msg).transform((s, ctx) => {
+  const d = new Date(`${s}:00Z`);
+  if (Number.isNaN(d.getTime()) || d.toISOString().slice(0, 16) !== s) { ctx.addIssue({ code: "custom", message: msg }); return z.NEVER; }
+  return d;
+});
 const month = z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, "Choose a month.");
 const refresh = () => revalidatePath("/", "layout");
 
@@ -35,7 +39,7 @@ const propertySchema = z.object({
   zip: z.string().trim().regex(/^\d{5}$/, "Five-digit ZIP."),
   propertyType: z.enum(["SINGLE_FAMILY", "DUPLEX", "TOWNHOME", "SMALL_MULTIFAMILY"]),
   bedrooms: int(0, 40, "Enter a whole number."),
-  bathrooms: z.coerce.number().min(0).max(40).refine((n) => Number.isInteger(n * 2), "Use halves, like 1.5."),
+  bathrooms: z.string().regex(/^\d{1,2}(\.5|\.0)?$/, "Use whole or half numbers, like 1.5.").transform(Number),
   squareFeet: int(100, 50_000, "Enter the living area in square feet."),
   yearBuilt: int(1800, 2100, "Enter a year."),
   description: z.string().trim().min(20, "Write at least a sentence.").max(2000),
@@ -319,7 +323,7 @@ export async function finalizeProposalAction(_prev: ActionState, fd: FormData): 
 
 export async function recordSaleAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const user = await requireAdmin();
-  const parsed = z.object({ propertyId: id, salePrice: dollars(), saleCosts: dollars(), finalOperating: optionalDollars(), idempotencyKey: idempotencyKeySchema }).safeParse(formObject(fd));
+  const parsed = z.object({ propertyId: id, salePrice: dollars(), saleCosts: dollars(), finalOperating: optionalDollars(), idempotencyKey: idempotencyKeySchema, confirm: z.literal("on", "Tick the box to confirm the payout.") }).safeParse(formObject(fd));
   if (!parsed.success) return zodFailure(parsed.error);
   return guard(async () => {
     await recordSale({ actorId: user.id, propertyId: parsed.data.propertyId, salePriceCents: parsed.data.salePrice, saleCostsCents: parsed.data.saleCosts, finalOperatingCents: parsed.data.finalOperating, idempotencyKey: parsed.data.idempotencyKey, ipAddress: await clientIp() });
@@ -354,11 +358,11 @@ export async function setKycAction(_prev: ActionState, fd: FormData): Promise<Ac
 
 export async function adjustWalletAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const user = await requireAdmin();
-  const parsed = z.object({ id, direction: z.enum(["credit", "debit"]), amount: dollars(), memo: z.string().trim().min(5, "Say why, for the audit log.").max(200) }).safeParse(formObject(fd));
+  const parsed = z.object({ id, direction: z.enum(["credit", "debit"]), amount: dollars(), memo: z.string().trim().min(5, "Say why, for the audit log.").max(200), idempotencyKey: idempotencyKeySchema }).safeParse(formObject(fd));
   if (!parsed.success) return zodFailure(parsed.error);
   return guard(async () => {
     const amt = parsed.data.direction === "credit" ? parsed.data.amount : -parsed.data.amount;
-    await adjust({ actorId: user.id, userId: parsed.data.id, amountCents: amt, memo: parsed.data.memo, ipAddress: await clientIp() });
+    await adjust({ actorId: user.id, userId: parsed.data.id, amountCents: amt, memo: parsed.data.memo, idempotencyKey: parsed.data.idempotencyKey, ipAddress: await clientIp() });
     refresh();
     return { ok: true, message: "Wallet adjusted and logged." };
   });

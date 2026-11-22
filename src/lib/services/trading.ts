@@ -321,6 +321,8 @@ export async function openWindow(windowId: string, actorId: string | null, now =
     const w = await tx.tradingWindow.findUnique({ where: { id: windowId } });
     if (!w || w.status !== "SCHEDULED") throw new DomainError("Only a scheduled window can be opened.");
     if (w.closesAt.getTime() <= now.getTime()) throw new DomainError("This window's closing time has already passed.");
+    const clash = await tx.tradingWindow.findFirst({ where: { id: { not: w.id }, status: "OPEN", closesAt: { gt: now }, ...(w.propertyId ? { OR: [{ propertyId: w.propertyId }, { propertyId: null }] } : {}) } });
+    if (clash) throw new DomainError("Another window covering these properties is already open. Close it first.");
     await tx.tradingWindow.update({ where: { id: w.id }, data: { status: "OPEN", opensAt: w.opensAt.getTime() > now.getTime() ? now : w.opensAt } });
     await audit(tx, { actorId, action: "window.opened", entityType: "TradingWindow", entityId: w.id, after: { opensAt: now, closesAt: w.closesAt } });
     const users = await holdersOfTradingProperties(tx, w.propertyId);

@@ -4,11 +4,10 @@ import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Badge, Facts, Note, PageHeader, SectionHeading, Table, Td, Th } from "@/components/ui/primitives";
 import { prisma } from "@/lib/db";
 import { formatPerShare } from "@/lib/domain/dividends";
-import { formatBps, formatCents, formatUnits } from "@/lib/domain/money";
+import { formatCents, formatUnits } from "@/lib/domain/money";
 import { monthLabel } from "@/lib/domain/trading-rules";
 import { fmtDateTime } from "@/lib/labels";
 import { requireAdmin } from "@/lib/session";
-import { getSettings } from "@/lib/settings";
 import { approveDividendAction, payDividendAction } from "../../actions";
 
 export const metadata = { title: "Dividend" };
@@ -18,7 +17,6 @@ export default async function DividendPage({ params }: { params: Promise<{ id: s
   const { id } = await params;
   const d = await prisma.dividendDistribution.findUnique({ where: { id }, include: { property: true, payments: { include: { user: { select: { name: true, email: true } } }, orderBy: { amountCents: "desc" } } } });
   if (!d) notFound();
-  const settings = await getSettings();
   const pool = d.netIncomeCents > 0n ? d.netIncomeCents - d.reserveAllocationCents + d.carryInCents : d.carryInCents;
   const payees = d.payments.filter((p) => p.amountCents > 0n).length;
   const tone = { DRAFT: "notice", APPROVED: "accent", PAID: "neutral" } as const;
@@ -31,7 +29,7 @@ export default async function DividendPage({ params }: { params: Promise<{ id: s
           <SectionHeading id="calc">The calculation</SectionHeading>
           <Facts rows={[
             { label: "Net income", value: formatCents(d.netIncomeCents) },
-            { label: `To liquidity reserve (${formatBps(settings.reserveAllocationBps, { decimals: 0 })})`, value: `−${formatCents(d.reserveAllocationCents)}` },
+            { label: "To liquidity reserve", value: `−${formatCents(d.reserveAllocationCents)}` },
             { label: "Rounding carried in from last month", value: `+${formatCents(d.carryInCents)}` },
             { label: "Available to pay", value: formatCents(pool), strong: true },
             { label: "Shares outstanding", value: formatUnits(d.outstandingUnits, 2) },

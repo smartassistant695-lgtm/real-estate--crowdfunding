@@ -65,7 +65,7 @@ export default async function OrdersPage({ searchParams }: { searchParams: Promi
                   <Td num>{formatCents(o.limitPriceCents)}</Td>
                   <Td num>{formatUnits(o.filledUnits, 2)} of {formatUnits(o.shareUnits, 2)}</Td>
                   <Td num>{o.side === "BUY" ? formatCents(o.heldCents) : "—"}</Td>
-                  <Td className="text-ink-soft">{fmtDate(o.window.closesAt)}</Td>
+                  <Td className="text-ink-soft">{fmtDate(new Date(o.window.closesAt.getTime() - 1))}</Td>
                   <Td><Badge tone={ORDER_STATUS[o.status].tone}>{ORDER_STATUS[o.status].label}</Badge></Td>
                   <Td num><CancelOrderButton action={cancelOrderAction} orderId={o.id} /></Td>
                 </tr>

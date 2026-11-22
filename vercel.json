@@ -1,11 +1,30 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "crons": [
-    { "path": "/api/cron/trading-windows", "schedule": "5 * * * *" },
-    { "path": "/api/cron/proposals", "schedule": "10 * * * *" },
-    { "path": "/api/cron/funding-deadlines", "schedule": "15 * * * *" },
-    { "path": "/api/cron/snapshots", "schedule": "30 4 * * *" },
-    { "path": "/api/cron/exit-votes", "schedule": "40 4 * * *" },
-    { "path": "/api/cron/draft-dividends", "schedule": "50 4 1 * *" }
-  ]
+    {
+      "path": "/api/cron/trading-windows",
+      "schedule": "5 0 * * *"
+    },
+    {
+      "path": "/api/cron/funding-deadlines",
+      "schedule": "15 0 * * *"
+    },
+    {
+      "path": "/api/cron/proposals",
+      "schedule": "25 0 * * *"
+    },
+    {
+      "path": "/api/cron/snapshots",
+      "schedule": "30 4 * * *"
+    },
+    {
+      "path": "/api/cron/exit-votes",
+      "schedule": "40 4 * * *"
+    },
+    {
+      "path": "/api/cron/draft-dividends",
+      "schedule": "50 4 1 * *"
+    }
+  ],
+  "buildCommand": "pnpm vercel-build"
 }

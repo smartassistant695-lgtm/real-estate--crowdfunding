@@ -8,6 +8,7 @@ import { BRAND } from "@/config/brand";
 import type { ActionState } from "@/components/ui/form";
 import { formObject, guard, zodFailure } from "@/lib/action";
 import { hashPassword, passwordSchema, signIn, signOut } from "@/lib/auth";
+import { appUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
 import { providers } from "@/lib/providers";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
@@ -74,7 +75,7 @@ export async function requestPasswordResetAction(_prev: ActionState, fd: FormDat
     if (user) {
       const token = randomBytes(32).toString("base64url");
       await prisma.passwordResetToken.create({ data: { userId: user.id, tokenHash: sha256(token), expiresAt: new Date(Date.now() + 60 * 60 * 1000) } });
-      const url = `${process.env.APP_URL ?? "http://localhost:3000"}/reset-password/${token}`;
+      const url = `${appUrl()}/reset-password/${token}`;
       await providers.email.send({ to: user.email, subject: `Reset your ${BRAND.name} password`, text: `Use this link within one hour to choose a new password:\n${url}\nIf you did not ask for this, you can ignore this email.` });
       await audit(prisma, { actorId: user.id, action: "user.password_reset_requested", entityType: "User", entityId: user.id, ipAddress: ip });
       if (process.env.NODE_ENV !== "production") demoLink = ` (Demo: email is logged to the server console. Link: ${url})`;

@@ -56,17 +56,21 @@ export async function withdraw(input: { userId: string; amountCents: bigint; ide
 }
 
 /** Admin-only correction. Always audited, always balanced against EXTERNAL. */
-export async function adjust(input: { actorId: string; userId: string; amountCents: bigint; memo: string; ipAddress?: string | null }) {
+export async function adjust(input: { actorId: string; userId: string; amountCents: bigint; memo: string; idempotencyKey: string; ipAddress?: string | null }) {
   if (input.amountCents === 0n) throw new DomainError("Adjustment cannot be zero.");
   return runTx(async (tx) => {
+    if (await claimIdempotencyKey(tx, input.idempotencyKey, input.actorId, "adjust")) return;
+    const target = await tx.user.findUnique({ where: { id: input.userId }, select: { role: true } });
+    if (target?.role !== "INVESTOR") throw new DomainError("Only investor wallets can be adjusted.");
     const wallet = (await lockWallets(tx, [input.userId])).get(input.userId)!;
     if (wallet.availableCents + input.amountCents < 0n) throw new DomainError("Adjustment would make the balance negative.");
     await tx.wallet.update({ where: { userId: input.userId }, data: { availableCents: { increment: input.amountCents } } });
-    const ref = `adj_${Date.now()}_${input.userId.slice(-6)}`;
+    const ref = `adj_${input.idempotencyKey}`;
     await postLedger(tx, ref, [
       { account: "USER_WALLET", userId: input.userId, type: "ADJUSTMENT", amountCents: input.amountCents, memo: input.memo },
       { account: "EXTERNAL", type: "ADJUSTMENT", amountCents: -input.amountCents, memo: `Admin adjustment: ${input.memo}` },
     ]);
+    await storeIdempotentResult(tx, input.idempotencyKey, { ok: true });
     await audit(tx, { actorId: input.actorId, action: "wallet.adjust", entityType: "Wallet", entityId: input.userId, before: { availableCents: wallet.availableCents }, after: { amountCents: input.amountCents, memo: input.memo }, ipAddress: input.ipAddress });
   });
 }

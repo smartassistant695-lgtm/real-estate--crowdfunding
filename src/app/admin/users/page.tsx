@@ -15,8 +15,8 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
   await requireAdmin();
   const sp = await searchParams;
   const q = (sp.q ?? "").trim().slice(0, 80);
-  const kyc = sp.kyc && sp.kyc in KYC_TONE ? (sp.kyc as keyof typeof KYC_TONE) : undefined;
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const kyc = sp.kyc && Object.hasOwn(KYC_TONE, sp.kyc) ? (sp.kyc as keyof typeof KYC_TONE) : undefined;
+  const page = Math.max(1, Math.min(10_000, Number.parseInt(sp.page ?? "1", 10) || 1));
   const where = { role: "INVESTOR" as const, ...(kyc ? { kycStatus: kyc } : {}), ...(q ? { OR: [{ email: { contains: q, mode: "insensitive" as const } }, { name: { contains: q, mode: "insensitive" as const } }] } : {}) };
   const [users, total] = await Promise.all([
     prisma.user.findMany({ where, include: { wallet: true, _count: { select: { holdings: { where: { shareUnits: { gt: 0n } } } } } }, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE, take: PAGE }),

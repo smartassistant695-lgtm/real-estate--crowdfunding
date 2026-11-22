@@ -25,9 +25,9 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
   const sp = await searchParams;
   const user = await currentUser();
   const where: Prisma.PropertyWhereInput = { status: { in: VISIBLE } };
-  if (sp.state && sp.state in US_STATES) where.state = sp.state;
+  if (sp.state && Object.hasOwn(US_STATES, sp.state)) where.state = sp.state;
   if (sp.city) where.city = { equals: sp.city.slice(0, 60), mode: "insensitive" };
-  if (sp.type && sp.type in PROPERTY_TYPE) where.propertyType = sp.type as PropertyType;
+  if (sp.type && Object.hasOwn(PROPERTY_TYPE, sp.type)) where.propertyType = sp.type as PropertyType;
   if (sp.status && VISIBLE.includes(sp.status as PropertyStatus)) where.status = sp.status as PropertyStatus;
   const minY = sp.minYield ? parsePercentToBps(sp.minYield) : null;
   const maxY = sp.maxYield ? parsePercentToBps(sp.maxYield) : null;
@@ -40,7 +40,7 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
   const maxPrice = sp.maxPrice ? parseDollarsToCents(sp.maxPrice) : null;
   let items = maxPrice !== null ? all.filter((x) => x.card.pricePerShareCents <= maxPrice) : all;
 
-  const sort = sp.sort && sp.sort in SORTS ? (sp.sort as keyof typeof SORTS) : "newest";
+  const sort = sp.sort && Object.hasOwn(SORTS, sp.sort) ? (sp.sort as keyof typeof SORTS) : "newest";
   const order = (s: PropertyStatus) => VISIBLE.indexOf(s);
   items = [...items].sort((a, b) => {
     if (sort === "yield") return b.card.projectedAnnualYieldBps - a.card.projectedAnnualYieldBps;

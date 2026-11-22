@@ -20,7 +20,7 @@ const FILTERS: Record<string, { label: string; types?: LedgerType[] }> = {
 export default async function ActivityPage({ searchParams }: { searchParams: Promise<{ show?: string; page?: string }> }) {
   const user = await requireInvestor();
   const sp = await searchParams;
-  const show = sp.show && sp.show in FILTERS ? sp.show : "all";
+  const show = sp.show && Object.hasOwn(FILTERS, sp.show) ? sp.show : "all";
   const page = Math.max(1, Math.min(500, Number.parseInt(sp.page ?? "1", 10) || 1));
   const where = { userId: user.id, account: "USER_WALLET" as const, ...(FILTERS[show]!.types ? { type: { in: FILTERS[show]!.types } } : {}) };
   const [entries, total] = await Promise.all([

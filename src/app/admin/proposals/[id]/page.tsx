@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ConfirmAction } from "@/components/ui/confirm-action";
-import { ActionForm, Input, Submit } from "@/components/ui/form";
+import { ActionForm, Checkbox, Input, Submit } from "@/components/ui/form";
 import { Badge, Facts, Note, PageHeader, SectionHeading, Table, Td, Th } from "@/components/ui/primitives";
 import { prisma } from "@/lib/db";
 import { formatBps, formatCents, formatUnits } from "@/lib/domain/money";
@@ -56,6 +56,7 @@ export default async function AdminProposal({ params }: { params: Promise<{ id: 
                 <Input label="Sale price" name="salePrice" prefix="$" inputMode="decimal" required />
                 <Input label="Selling costs" name="saleCosts" prefix="$" inputMode="decimal" required hint="Agent commission, closing costs, payoffs." />
                 <Input label="Net income since the last dividend" name="finalOperating" prefix="$" inputMode="decimal" hint="From the closing statement. Leave blank if none." />
+                <Checkbox name="confirm" required label="I have checked these figures against the closing statement. Paying out cannot be undone." />
                 <Submit variant="danger" className="w-full sm:w-auto" pendingLabel="Paying out…">Record sale and pay holders</Submit>
               </ActionForm>
             </section>

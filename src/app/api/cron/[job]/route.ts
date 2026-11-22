@@ -37,7 +37,7 @@ function authorized(req: NextRequest): boolean {
 export async function GET(req: NextRequest, { params }: { params: Promise<{ job: string }> }) {
   if (!authorized(req)) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   const { job } = await params;
-  const run = JOBS[job];
+  const run = Object.hasOwn(JOBS, job) ? JOBS[job] : undefined;
   if (!run) return NextResponse.json({ error: "unknown job" }, { status: 404 });
   const started = Date.now();
   try {

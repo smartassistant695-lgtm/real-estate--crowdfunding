@@ -15,7 +15,7 @@ export default async function AdminAudit({ searchParams }: { searchParams: Promi
   const action = (sp.action ?? "").trim().slice(0, 60);
   const entity = (sp.entity ?? "").trim().slice(0, 60);
   const actor = (sp.actor ?? "").trim().slice(0, 120);
-  const page = Math.max(1, Number.parseInt(sp.page ?? "1", 10) || 1);
+  const page = Math.max(1, Math.min(10_000, Number.parseInt(sp.page ?? "1", 10) || 1));
   const actorIds = actor ? (await prisma.user.findMany({ where: { email: { contains: actor, mode: "insensitive" } }, select: { id: true } })).map((u) => u.id) : null;
   const where = {
     ...(action ? { action: { startsWith: action } } : {}),

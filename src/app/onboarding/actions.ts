@@ -16,7 +16,7 @@ import { US_STATES } from "@/lib/us-states";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Enter your full legal name.").max(120),
-  state: z.string().refine((s) => s in US_STATES, "Choose your state of residence."),
+  state: z.string().refine((s) => Object.hasOwn(US_STATES, s), "Choose your state of residence."),
   dateOfBirth: z.iso.date("Enter your date of birth.").transform((s, ctx) => {
     const d = new Date(`${s}T00:00:00Z`);
     const now = new Date();

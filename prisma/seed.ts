@@ -78,11 +78,14 @@ function projectedYieldBps(p: SeedProperty): number {
 
 async function addAppraisal(propertyId: string, valueDollars: number, effectiveDate: Date, source: string, notes = "") {
   const p = await prisma.property.findUniqueOrThrow({ where: { id: propertyId } });
-  const outstanding = p.soldUnits - p.retiredUnits;
-  const basis = outstanding > 0n ? outstanding : p.totalUnits;
+  // Same rule as the admin appraisal service: (home value + repair reserve + liquidity reserve)
+  // ÷ shares outstanding, or ÷ shares offered until the offering has sold out.
+  const funded = ["FUNDED", "TRADING", "EXIT_VOTE"].includes(p.status);
+  const basis = funded ? p.soldUnits - p.retiredUnits : p.totalUnits;
+  const reserve = await prisma.liquidityReserve.findUnique({ where: { propertyId } });
   const valueCents = cents(valueDollars);
   await prisma.appraisal.create({
-    data: { propertyId, valueCents, navPerShareCents: perShare(valueCents + p.reserveFundCents, basis), effectiveDate, source, notes, createdAt: effectiveDate },
+    data: { propertyId, valueCents, navPerShareCents: perShare(valueCents + p.reserveFundCents + (reserve?.balanceCents ?? 0n), basis), effectiveDate, source, notes, createdAt: effectiveDate },
   });
 }
 

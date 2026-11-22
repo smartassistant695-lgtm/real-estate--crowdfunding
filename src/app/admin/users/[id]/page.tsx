@@ -51,7 +51,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
           </section>
           <section aria-labelledby="adjust">
             <SectionHeading id="adjust">Adjust wallet</SectionHeading>
-            <ActionForm action={adjustWalletAction} className="space-y-4">
+            <ActionForm action={adjustWalletAction} idempotent className="space-y-4">
               <input type="hidden" name="id" value={u.id} />
               <Select label="Direction" name="direction" defaultValue="credit"><option value="credit">Credit (add)</option><option value="debit">Debit (remove)</option></Select>
               <Input label="Amount" name="amount" prefix="$" inputMode="decimal" required />

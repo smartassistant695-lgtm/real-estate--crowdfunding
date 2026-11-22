@@ -50,6 +50,7 @@ export type PropertyInput = {
 function sharesFor(d: Pick<PropertyInput, "purchasePriceCents" | "closingCostsCents" | "reserveFundCents" | "offeringPricePerShareCents">): bigint {
   const raise = d.purchasePriceCents + d.closingCostsCents + d.reserveFundCents;
   if (d.offeringPricePerShareCents <= 0n) throw new DomainError("Enter a share price above $0.", "offeringPrice");
+  if (raise <= 0n) throw new DomainError("Enter the purchase price, closing costs and reserve.", "purchasePrice");
   if (raise % d.offeringPricePerShareCents !== 0n) {
     throw new DomainError("The total raise (price + closing costs + reserve) must divide evenly by the share price, so every share costs the same.", "offeringPrice");
   }
@@ -70,6 +71,15 @@ export async function createProperty(actorId: string, d: PropertyInput) {
 export async function updateProperty(actorId: string, id: string, d: PropertyInput) {
   return runTx(async (tx) => {
     const before = await lockProperty(tx, id);
+    // Once an offering opens, investors have relied on the offering terms: the exit year and the
+    // manager can only change by a holder vote, and projections are frozen.
+    if (before.status !== "COMING_SOON") {
+      if (d.plannedExitYear !== before.plannedExitYear) throw new DomainError("The planned exit year can only change through a holder vote (Extend exit date).", "plannedExitYear");
+      if (d.propertyManagerName !== before.propertyManagerName) throw new DomainError("The property manager can only change through a holder vote (Change manager).", "propertyManagerName");
+      if (d.projectedAnnualYieldBps !== before.projectedAnnualYieldBps || d.projectedMonthlyRentCents !== before.projectedMonthlyRentCents) throw new DomainError("Projections shown in the offering cannot change after it opens.", "projectedYield");
+    }
+    if (before.status === "FUNDING" && (!d.fundingDeadline || d.fundingDeadline.getTime() <= Date.now())) throw new DomainError("An open offering needs a funding deadline in the future. To end it now, cancel the offering.", "fundingDeadline");
+    if (before.status === "FUNDING" && before.fundingDeadline && d.fundingDeadline && d.fundingDeadline.getTime() > before.fundingDeadline.getTime() + 60 * 86_400_000) throw new DomainError("The deadline can be extended by at most 60 days.", "fundingDeadline");
     const economicsChanged =
       d.purchasePriceCents !== before.purchasePriceCents || d.closingCostsCents !== before.closingCostsCents || d.reserveFundCents !== before.reserveFundCents || d.offeringPricePerShareCents !== before.offeringPricePerShareCents;
     if (economicsChanged && (before.status !== "COMING_SOON" || before.soldUnits > 0n)) {
@@ -127,9 +137,15 @@ export async function setPhotos(actorId: string, propertyId: string, photos: { u
 }
 
 export async function addDocument(actorId: string, propertyId: string | null, d: { title: string; category: DocumentCategory; filename: string; bytes: Uint8Array; contentType: string }) {
+  // Check the file really is a PDF, not just labelled as one by the browser.
+  const magic = String.fromCharCode(...d.bytes.slice(0, 5));
+  if (magic !== "%PDF-") throw new DomainError("That file is not a PDF.", "file");
   const key = `${propertyId ?? "platform"}/${Date.now()}-${d.filename.replace(/[^\w.-]/g, "_").slice(0, 80)}`;
   const stored = await providers.documents.put({ key, filename: d.filename, contentType: d.contentType, bytes: d.bytes });
-  const doc = await prisma.document.create({ data: { propertyId, title: d.title, category: d.category, url: `${stored.url}&title=${encodeURIComponent(d.title)}` } });
+  const url = new URL(stored.url, "http://placeholder.invalid");
+  url.searchParams.set("title", d.title);
+  const href = stored.url.startsWith("/") ? `${url.pathname}${url.search}` : url.toString();
+  const doc = await prisma.document.create({ data: { propertyId, title: d.title, category: d.category, url: href } });
   await audit(prisma, { actorId, action: "document.published", entityType: "Document", entityId: doc.id, after: { title: d.title, category: d.category, key, provider: providers.documents.name } });
   return doc;
 }
@@ -145,9 +161,16 @@ export async function addAppraisal(actorId: string, propertyId: string, d: { val
   let afterCommit: (() => Promise<void>) | undefined;
   const result = await runTx(async (tx) => {
     const p = await lockProperty(tx, propertyId);
+    if (p.status === "SOLD" || p.status === "CANCELLED") throw new DomainError("This property is closed.");
+    const latest = await tx.appraisal.findFirst({ where: { propertyId }, orderBy: [{ effectiveDate: "desc" }, { createdAt: "desc" }] });
+    if (latest && d.effectiveDate.getTime() < latest.effectiveDate.getTime()) throw new DomainError("A new appraisal cannot be dated before the latest one.", "effectiveDate");
     const settings = await getSettings(tx);
     const reserve = await tx.liquidityReserve.findUnique({ where: { propertyId } });
-    const outstanding = p.soldUnits - p.retiredUnits > 0n ? p.soldUnits - p.retiredUnits : p.totalUnits;
+    // Until the offering sells out, value is spread over every share offered (the shares that will
+    // exist once it closes), not only the ones sold so far.
+    const funded = ["FUNDED", "TRADING", "EXIT_VOTE"].includes(p.status);
+    const outstanding = funded ? p.soldUnits - p.retiredUnits : p.totalUnits;
+    if (outstanding <= 0n) throw new DomainError("This property has no shares.");
     const navPerShareCents = perShare(d.valueCents + p.reserveFundCents + (reserve?.balanceCents ?? 0n), outstanding);
     const a = await tx.appraisal.create({ data: { propertyId, ...d, navPerShareCents } });
     const band = circuitBreakerBand(navPerShareCents, settings.circuitBreakerBps);
@@ -192,7 +215,12 @@ export async function updateSettings(actorId: string, d: SettingsInput, ipAddres
   if (d.holdingPeriodMonths < 0 || d.holdingPeriodMonths > 60) throw new DomainError("Holding period must be 0–60 months.", "holdingPeriodMonths");
   if (d.proposalPassThresholdBps >= 10_000) throw new DomainError("The pass threshold must be below 100%, or nothing could ever pass.", "proposalPassThreshold");
   if (d.votingCapBps <= 0) throw new DomainError("The voting cap must be above 0%.", "votingCap");
-  if (d.circuitBreakerBps <= 0) throw new DomainError("The price band must be above 0%.", "circuitBreaker");
+  if (d.circuitBreakerBps <= 0 || d.circuitBreakerBps >= 10_000) throw new DomainError("The price band must be between 0% and 100%.", "circuitBreaker");
+  if (d.proposalQuorumBps < 100) throw new DomainError("Quorum must be at least 1% of shares.", "quorum");
+  if (d.proposalPassThresholdBps < 5000) throw new DomainError("The pass threshold must be at least 50%, so a minority can never decide.", "passThreshold");
+  if (d.buybackDiscountBps >= 10_000) throw new DomainError("The buyback discount must be below 100%.", "buybackDiscount");
+  if (d.reserveAllocationBps > 10_000) throw new DomainError("The reserve allocation cannot exceed 100%.", "reserveAllocation");
+  if (d.minInvestmentCents > d.annualInvestmentLimitCents) throw new DomainError("The minimum investment cannot be above the annual limit.", "minInvestment");
   return runTx(async (tx) => {
     const before = await getSettings(tx);
     const after = await tx.platformSettings.update({ where: { id: 1 }, data: d });
@@ -205,7 +233,8 @@ export async function updateSettings(actorId: string, d: SettingsInput, ipAddres
 
 export async function setUserLimit(actorId: string, userId: string, annualInvestmentLimitCents: bigint) {
   if (annualInvestmentLimitCents < 0n) throw new DomainError("The limit cannot be negative.", "limit");
-  const before = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { annualInvestmentLimitCents: true } });
+  const before = await prisma.user.findUniqueOrThrow({ where: { id: userId }, select: { annualInvestmentLimitCents: true, role: true } });
+  if (before.role !== "INVESTOR") throw new DomainError("Only investor accounts have an investment limit.");
   await prisma.user.update({ where: { id: userId }, data: { annualInvestmentLimitCents } });
   await audit(prisma, { actorId, action: "user.limit_changed", entityType: "User", entityId: userId, before, after: { annualInvestmentLimitCents } });
 }
@@ -220,7 +249,11 @@ export async function setKycStatus(actorId: string, userId: string, status: "APP
 export async function scheduleWindow(actorId: string, d: { propertyId: string | null; opensAt: Date; closesAt: Date }) {
   if (d.closesAt.getTime() <= d.opensAt.getTime()) throw new DomainError("The window must close after it opens.", "closesAt");
   if (d.closesAt.getTime() <= Date.now()) throw new DomainError("The window must close in the future.", "closesAt");
-  const overlap = await prisma.tradingWindow.findFirst({ where: { status: { not: "CLOSED" }, propertyId: d.propertyId, opensAt: { lt: d.closesAt }, closesAt: { gt: d.opensAt } } });
+  // A property-specific window must not overlap a platform-wide one (or vice versa): two live
+  // windows for one property would split its order book.
+  const overlap = await prisma.tradingWindow.findFirst({
+    where: { status: { not: "CLOSED" }, opensAt: { lt: d.closesAt }, closesAt: { gt: d.opensAt }, ...(d.propertyId ? { OR: [{ propertyId: d.propertyId }, { propertyId: null }] } : {}) },
+  });
   if (overlap) throw new DomainError("This overlaps another window. Close or reschedule that one first.");
   const w = await prisma.tradingWindow.create({ data: { ...d, status: "SCHEDULED" } });
   await audit(prisma, { actorId, action: "window.scheduled", entityType: "TradingWindow", entityId: w.id, after: d });
