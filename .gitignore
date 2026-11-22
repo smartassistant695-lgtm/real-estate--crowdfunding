@@ -11,3 +11,4 @@ playwright-report
 .vercel
 .DS_Store
 storage/
+.next-build

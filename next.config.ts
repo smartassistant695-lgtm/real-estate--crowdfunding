@@ -10,6 +10,8 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // Lets a production build run beside the dev server (e.g. NEXT_DIST_DIR=.next-build pnpm build).
+  distDir: process.env.NEXT_DIST_DIR || ".next",
   agentRules: false,
   images: {
     loader: "custom",
