@@ -41,7 +41,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
       {children}
       <div aria-live="polite" role="status" className="no-print fixed bottom-4 left-4 z-50 flex w-[min(24rem,calc(100vw-2rem))] flex-col gap-2">
         {toasts.map((t) => (
-          <div key={t.id} className="flex animate-rise items-start gap-3 rounded-sm border border-ink bg-ink px-4 py-3 text-sm text-paper shadow-pop">
+          <div key={t.id} className="on-ink flex animate-rise items-start gap-3 rounded-sm border border-ink bg-ink px-4 py-3 text-sm text-paper shadow-pop">
             <span className="flex-1">{t.message}</span>
             <button type="button" onClick={() => dismiss(t.id)} className="label text-paper! opacity-70 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-paper" aria-label="Dismiss message">
               Close

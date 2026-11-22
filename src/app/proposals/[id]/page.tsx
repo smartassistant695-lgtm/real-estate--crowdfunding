@@ -35,7 +35,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
 
   return (
     <Page className="pb-8">
-      <header className="grid gap-6 border-b border-ink pb-8 pt-10 md:grid-cols-[1fr_auto] md:items-end md:pt-14">
+      <header className="grid gap-6 border-b border-ink pb-8 pt-10 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:pt-14">
         <div className="max-w-prose">
           <nav aria-label="Breadcrumb" className="mb-4 text-sm text-stone">
             <Link href={`/properties/${p.property.slug}?tab=governance`} className="hover:text-ink">{p.property.name}</Link> <span aria-hidden>/</span> {PROPOSAL_TYPE[p.type]}
@@ -51,7 +51,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
         </div>
       </header>
 
-      <div className="grid gap-12 pt-10 lg:grid-cols-[1fr_22rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0 space-y-14">
           <section aria-labelledby="tally">
             <SectionHeading id="tally" aside={`${t.voters} ${t.voters === 1 ? "holder has" : "holders have"} voted`}>{p.status === "OPEN" ? "Live tally" : "Result"}</SectionHeading>
@@ -85,7 +85,7 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
           </section>
 
           {p.pros || p.cons ? (
-            <section aria-labelledby="case" className="grid gap-8 md:grid-cols-2">
+            <section aria-labelledby="case" className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-2">
               <h2 id="case" className="sr-only">For and against, from the manager</h2>
               <div>
                 <h3 className="mb-3 border-b border-ink pb-2 font-serif text-md">Arguments for</h3>

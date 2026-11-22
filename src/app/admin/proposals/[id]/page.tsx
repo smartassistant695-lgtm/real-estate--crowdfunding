@@ -25,7 +25,7 @@ export default async function AdminProposal({ params }: { params: Promise<{ id: 
   return (
     <>
       <PageHeader back={{ href: "/admin/proposals", label: "Proposals" }} title={p.title} lede={`${p.property.name} · ${PROPOSAL_TYPE[p.type]}${p.isPlannedExit ? " (planned exit)" : ""}`} actions={<><Badge tone={PROPOSAL_STATUS[p.status].tone}>{PROPOSAL_STATUS[p.status].label}</Badge>{p.status !== "DRAFT" ? <Link href={`/proposals/${p.id}`} className="link text-sm">Investor view</Link> : null}</>} />
-      <div className="grid gap-12 pt-10 xl:grid-cols-[22rem_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 xl:grid-cols-[22rem_1fr]">
         <section aria-labelledby="rules">
           <SectionHeading id="rules">Rules and dates</SectionHeading>
           <Facts rows={[

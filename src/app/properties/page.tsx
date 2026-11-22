@@ -5,7 +5,7 @@ import { InvestingDisclosure } from "@/components/site/footer";
 import { PropertyCard } from "@/components/site/property-card";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
-import { Empty, Page, PageHeader } from "@/components/ui/primitives";
+import { Empty, Note, Page, PageHeader } from "@/components/ui/primitives";
 import { cn } from "@/lib/cn";
 import { prisma } from "@/lib/db";
 import { parseDollarsToCents, parsePercentToBps, ratioBps } from "@/lib/domain/money";
@@ -38,6 +38,13 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
     prisma_places(),
   ]);
   const maxPrice = sp.maxPrice ? parseDollarsToCents(sp.maxPrice) : null;
+  // Say which filters were ignored instead of silently showing nothing.
+  const ignored = [
+    sp.minYield && minY === null ? "minimum yield" : null,
+    sp.maxYield && maxY === null ? "maximum yield" : null,
+    sp.maxPrice && maxPrice === null ? "maximum share price" : null,
+  ].filter(Boolean) as string[];
+  const swapped = minY !== null && maxY !== null && minY > maxY;
   let items = maxPrice !== null ? all.filter((x) => x.card.pricePerShareCents <= maxPrice) : all;
 
   const sort = sp.sort && Object.hasOwn(SORTS, sp.sort) ? (sp.sort as keyof typeof SORTS) : "newest";
@@ -85,18 +92,18 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
           <option value="">Any</option>
           {VISIBLE.map((s) => <option key={s} value={s}>{PROPERTY_STATUS[s].label}</option>)}
         </Select>
-        <Input label="Min yield" name="minYield" inputMode="decimal" suffix="%" defaultValue={sp.minYield ?? ""} placeholder="0" />
-        <Input label="Max yield" name="maxYield" inputMode="decimal" suffix="%" defaultValue={sp.maxYield ?? ""} placeholder="10" />
-        <Input label="Max share price" name="maxPrice" inputMode="decimal" prefix="$" defaultValue={sp.maxPrice ?? ""} placeholder="50" />
+        <Input label="Min yield" name="minYield" inputMode="decimal" suffix="%" defaultValue={sp.minYield ?? ""} placeholder="Any" />
+        <Input label="Max yield" name="maxYield" inputMode="decimal" suffix="%" defaultValue={sp.maxYield ?? ""} placeholder="Any" />
+        <Input label="Max share price" name="maxPrice" inputMode="decimal" prefix="$" defaultValue={sp.maxPrice ?? ""} placeholder="Any" />
         <Select label="Sort" name="sort" defaultValue={sort}>
           {Object.entries(SORTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </Select>
         <div className="col-span-2 flex items-center gap-4 md:col-span-4 lg:col-span-8">
-          <Button type="submit" variant="secondary" size="sm">Apply</Button>
+          <Button type="submit" variant="secondary">Apply</Button>
           {filtered ? <Link href={`/properties?view=${view}`} className="link text-sm">Clear filters</Link> : null}
-          <div className="ml-auto flex text-xs" role="group" aria-label="Layout">
+          <div className="ml-auto flex" role="group" aria-label="Layout">
             {(["grid", "list"] as const).map((v) => (
-              <Link key={v} href={qs({ view: v })} aria-current={view === v ? "true" : undefined} className={cn("border border-ink px-3 py-2 capitalize first:rounded-l-sm last:-ml-px last:rounded-r-sm", view === v ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
+              <Link key={v} href={qs({ view: v })} aria-current={view === v ? "true" : undefined} className={cn("flex h-10 items-center border border-ink px-4 text-sm capitalize first:rounded-l-sm last:-ml-px last:rounded-r-sm", view === v ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
                 {v}
               </Link>
             ))}
@@ -104,6 +111,12 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
         </div>
       </form>
 
+      {ignored.length || swapped ? (
+        <Note tone="notice" className="mt-6">
+          {ignored.length ? `We ignored the ${ignored.join(" and ")} because it isn’t a number. Use digits, like 5 or 5.5. ` : ""}
+          {swapped ? "The minimum yield is higher than the maximum, so nothing can match." : ""}
+        </Note>
+      ) : null}
       {items.length === 0 ? (
         <Empty title="No properties match those filters." action={<ButtonLink href="/properties" variant="secondary">Show all properties</ButtonLink>}>
           There are only a handful of homes on the platform at a time. Try widening the yield range or clearing the state.

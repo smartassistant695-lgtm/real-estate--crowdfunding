@@ -153,7 +153,7 @@ export default async function DesignPage({ searchParams }: { searchParams: Promi
           </Block>
 
           <Block id="spacing" title="Spacing and shape" aside="4px grid">
-            <div className="grid gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-10 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
               <ul className="space-y-2">
                 {SPACING.map((s) => (
                   <li key={s.n} className="grid grid-cols-[4rem_1fr] items-center gap-4 text-xs">
@@ -217,7 +217,7 @@ export default async function DesignPage({ searchParams }: { searchParams: Promi
           </Block>
 
           <Block id="forms" title="Form controls">
-            <div className="grid gap-12 md:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-12 md:grid-cols-2">
               <div className="max-w-form space-y-5">
                 <Input label="Amount" name="d-amount" prefix="$" defaultValue="250.00" hint="From $26 to $10,000 a year." />
                 <Input label="Shares" name="d-shares" suffix="shares" defaultValue="0.5" error="You can sell up to 2.4 shares." />
@@ -328,7 +328,7 @@ export default async function DesignPage({ searchParams }: { searchParams: Promi
           </Block>
 
           <Block id="charts" title="Charts">
-            <div className="grid gap-12 xl:grid-cols-2">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-12 xl:grid-cols-2">
               <ChartFrame
                 title="Value per share"
                 summary="Appraised value rose from $9.83 to $10.40 over the year; trades ran slightly above it."
@@ -348,7 +348,7 @@ export default async function DesignPage({ searchParams }: { searchParams: Promi
           </Block>
 
           <Block id="card" title="Property card and wordmark" aside="Real seeded property">
-            <div className="grid gap-12 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+            <div className="grid grid-cols-[minmax(0,1fr)] gap-12 md:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
               {card ? <PropertyCard p={card} /> : <Empty title="No seeded property found.">Run the seed to see a real card.</Empty>}
               <div className="space-y-8">
                 {card && cards[1] ? <PropertyCard p={cards.find((c) => c.card.slug !== card.slug)!.card} layout="list" /> : null}

@@ -49,7 +49,7 @@ export default async function EditProperty({ params, searchParams }: { params: P
 
       <section className="pt-14" aria-labelledby="appraisals">
         <SectionHeading id="appraisals" aside="Orders priced outside the new range are closed automatically">Appraisals</SectionHeading>
-        <div className="grid gap-10 xl:grid-cols-[1fr_20rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_20rem]">
           {p.appraisals.length ? (
             <Table caption="Appraisal history">
               <thead><tr><Th>Effective</Th><Th num>Value</Th><Th num>Per share</Th><Th>Source</Th></tr></thead>
@@ -78,14 +78,14 @@ export default async function EditProperty({ params, searchParams }: { params: P
 
       <section className="pt-14" aria-labelledby="docs">
         <SectionHeading id="docs" aside="Stored by the mock storage adapter">Documents</SectionHeading>
-        <div className="grid gap-10 xl:grid-cols-[1fr_20rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-10 xl:grid-cols-[minmax(0,1fr)_20rem]">
           {p.documents.length ? (
             <Table caption="Documents">
               <thead><tr><Th>Title</Th><Th>Type</Th><Th>Published</Th></tr></thead>
               <tbody>{p.documents.map((d) => <tr key={d.id}><Td className="py-1"><Link href={d.url} className="link">{d.title}</Link></Td><Td className="py-1 text-ink-soft">{DOCUMENT_CATEGORY[d.category]}</Td><Td className="num py-1 text-ink-soft">{fmtDate(d.publishedAt)}</Td></tr>)}</tbody>
             </Table>
           ) : <p className="text-sm text-stone">Nothing published yet.</p>}
-          <ActionForm action={uploadDocumentAction} className="max-w-form space-y-4" encType="multipart/form-data">
+          <ActionForm action={uploadDocumentAction} className="max-w-form space-y-4">
             <input type="hidden" name="id" value={p.id} />
             <Input label="Title" name="title" required />
             <Select label="Type" name="category" defaultValue="OFFERING_CIRCULAR">

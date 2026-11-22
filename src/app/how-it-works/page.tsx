@@ -155,7 +155,7 @@ export default async function HowItWorks() {
         lede={`You buy shares of one rental home’s company, from ${min}. You receive your part of the rent each month. You can sell once a month to other investors, if one wants to buy. You vote on major decisions.`}
       />
 
-      <section aria-labelledby="steps" className="grid gap-12 pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-20">
+      <section aria-labelledby="steps" className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-14 lg:grid-cols-[minmax(0,1fr)_minmax(0,24rem)] lg:gap-20">
         <div>
           <h2 id="steps" className="sr-only">Four steps</h2>
           <ol className="border-t border-ink">

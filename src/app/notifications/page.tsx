@@ -23,7 +23,7 @@ export default async function NotificationsPage() {
       <PageHeader
         title="Notifications"
         lede={unread ? `${unread} unread. We also send these by email.` : "You are up to date. We also send these by email."}
-        actions={unread ? <form action={markAllReadAction}><Button type="submit" variant="secondary" size="sm">Mark all as read</Button></form> : undefined}
+        actions={unread ? <form action={markAllReadAction}><Button type="submit" variant="secondary">Mark all as read</Button></form> : undefined}
       />
       {items.length === 0 ? (
         <Empty title="Nothing here yet.">Purchases, dividends, trading windows, order fills and votes will show up here.</Empty>

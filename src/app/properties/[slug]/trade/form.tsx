@@ -59,14 +59,15 @@ export function OrderForm(p: Props) {
           ))}
         </div>
         <div className="grid grid-cols-2 gap-4">
-          <Input label="Your price per share" name="price" inputMode="decimal" prefix="$" value={price} onChange={(e) => setPrice(e.target.value)} hint={`Appraised ${formatCents(nav)}`} />
-          <Input label="Shares" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={side === "SELL" ? `${formatUnits(sellable)} sellable` : "Steps of 0.01"} />
+          <Input label="Your price per share" name="price" inputMode="decimal" prefix="$" value={price} onChange={(e) => setPrice(e.target.value)} hint={`Appraised ${formatCents(nav)}`} error={problem && (problem.startsWith("Price") || problem.startsWith("Enter a price")) ? problem : undefined} />
+          <Input label="Shares" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={side === "SELL" ? `${formatUnits(sellable)} sellable` : "Steps of 0.01"} error={problem && qty && !problem.startsWith("Price") ? problem : undefined} />
         </div>
         <p className="num mt-4 text-sm" aria-live="polite">
           {total !== null && units !== null && units > 0n ? (side === "BUY" ? <>Up to <strong className="font-medium">{formatCents(total)}</strong> will be set aside from your cash.</> : <>You would receive about <strong className="font-medium">{formatCents(total)}</strong> if it all sells at your price.</>) : <span className="text-stone">Enter a price and quantity.</span>}
         </p>
-        {problem && qty ? <p className="mt-2 text-sm text-loss" role="alert">{problem}</p> : null}
+        
         <Button size="lg" className="mt-5 w-full" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
+        {problem && !qty ? <p className="mt-2 text-xs text-stone">Enter how many shares to continue.</p> : null}
       </div>
 
       {review && priceCents !== null && units !== null && total !== null ? (
@@ -108,7 +109,7 @@ export function ReserveForm({ action, propertyId, priceCents, maxUnits, sellable
       <input type="hidden" name="propertyId" value={propertyId} />
       <Input label="Shares to sell to the reserve" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={`Up to ${formatUnits(cap, 2)} shares at ${formatCents(price)} each, while the reserve’s budget for this month lasts`} />
       <p className="num mt-3 text-sm" aria-live="polite">
-        {proceeds !== null && units !== null && units > 0n && !tooMany ? <>You would receive <strong className="font-medium">{formatCents(proceeds)}</strong> immediately. The shares are retired.</> : tooMany ? <span className="text-loss">That is more than the reserve can buy from you right now.</span> : null}
+        {proceeds !== null && units !== null && units > 0n && !tooMany ? <>You would receive <strong className="font-medium">{formatCents(proceeds)}</strong> immediately. The shares are retired.</> : tooMany ? <span className="text-loss">That is more than the reserve can buy from you right now.</span> : qty && units === null ? <span className="text-loss">Enter a number of shares, like 2 or 2.5.</span> : !qty ? <span className="text-stone">Enter how many shares to sell.</span> : null}
       </p>
       <Submit variant="secondary" className="mt-4" disabled={!units || units <= 0n || tooMany} pendingLabel="Selling…">Sell to reserve</Submit>
     </ActionForm>

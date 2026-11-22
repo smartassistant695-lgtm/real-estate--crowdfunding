@@ -93,7 +93,7 @@ export default async function Home() {
       <Page>
         {/* What you own */}
         {f ? (
-          <section aria-labelledby="own" className="grid gap-10 pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-20 lg:pt-24">
+          <section aria-labelledby="own" className="grid grid-cols-[minmax(0,1fr)] gap-10 pt-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,30rem)] lg:gap-20 lg:pt-24">
             <div className="max-w-prose">
               <h2 id="own" className="text-2xl md:text-3xl">What you own</h2>
               <p className="mt-5 text-md">One house, through the company that owns it. Not a fund, not a basket.</p>
@@ -233,7 +233,7 @@ export default async function Home() {
       <Page>
         {/* How you earn: appreciation */}
         {f && nav && firstAppraisal ? (
-          <section aria-labelledby="value" className="grid gap-10 pt-16 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-20 lg:pt-24">
+          <section aria-labelledby="value" className="grid grid-cols-[minmax(0,1fr)] gap-10 pt-16 lg:grid-cols-[minmax(0,26rem)_minmax(0,1fr)] lg:gap-20 lg:pt-24">
             <div>
               <h2 id="value" className="text-2xl md:text-3xl">Then appreciation, if it comes</h2>
               <p className="mt-5 text-ink-soft">
@@ -284,7 +284,7 @@ export default async function Home() {
         ) : null}
 
         {/* How selling works */}
-        <section aria-labelledby="sell" className="grid gap-10 pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20 lg:pt-28">
+        <section aria-labelledby="sell" className="grid grid-cols-[minmax(0,1fr)] gap-10 pt-20 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20 lg:pt-28">
           <div>
             <h2 id="sell" className="text-2xl md:text-3xl">How selling works</h2>
             <p className="mt-5 text-md">Possible, not promised.</p>
@@ -332,7 +332,7 @@ export default async function Home() {
         </section>
 
         {/* How voting works */}
-        <section aria-labelledby="vote" className="grid gap-10 pt-20 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-20 lg:pt-28">
+        <section aria-labelledby="vote" className="grid grid-cols-[minmax(0,1fr)] gap-10 pt-20 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] lg:gap-20 lg:pt-28">
           <div className="lg:order-2">
             <h2 id="vote" className="text-2xl md:text-3xl">How voting works</h2>
             <p className="mt-5 text-ink-soft">
@@ -351,7 +351,7 @@ export default async function Home() {
               The cap means no single holder decides alone, however many shares they own. Abstaining counts toward quorum, not toward the result.
             </p>
           </div>
-          <div className="grid gap-12 lg:order-1">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-12 lg:order-1">
             {d.votes.map((v) => <VoteResult key={v.id} v={v} />)}
           </div>
         </section>
@@ -374,7 +374,7 @@ export default async function Home() {
 
       {/* Risks: a sunk band, same calm voice. */}
       <section aria-labelledby="risks" className="mt-20 bg-paper-deep lg:mt-28">
-        <Page className="grid gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20 lg:py-24">
+        <Page className="grid grid-cols-[minmax(0,1fr)] gap-10 py-16 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:gap-20 lg:py-24">
           <div>
             <h2 id="risks" className="text-2xl md:text-3xl">What can go wrong</h2>
             <p className="mt-5 text-ink-soft">The risks are as real as the rent. Here they are, with examples from this demo’s own homes.</p>

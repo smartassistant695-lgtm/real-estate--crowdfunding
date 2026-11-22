@@ -45,6 +45,11 @@ export function InvestForm(props: Props) {
   else if (cost > available) problem = `You have ${formatCents(available)} available. Add funds to invest this much.`;
   else if (cost > room) problem = `This would take you over your annual investment limit. You can invest ${formatCents(room)} more this year.`;
 
+  // Only complain about what the person has typed in the current mode.
+  const typed = mode === "dollars" ? amount.trim() !== "" : sharesText.trim() !== "";
+  const showProblem = typed && !!problem;
+  const shareWord = (u: bigint) => (u === 1_000_000n ? "share" : "shares");
+
   return (
     <ActionForm action={props.action} idempotent>
       <input type="hidden" name="propertyId" value={props.propertyId} />
@@ -64,14 +69,14 @@ export function InvestForm(props: Props) {
         )}
         <p className="num mt-5 font-serif text-xl" aria-live="polite">
           {units !== null && cost !== null && units > 0n ? (
-            mode === "dollars" ? <>{formatUnits(units)} shares <span className="text-md text-stone">for {formatCents(cost)}</span></> : <>{formatCents(cost)} <span className="text-md text-stone">for {formatUnits(units)} shares</span></>
+            mode === "dollars" ? <>{formatUnits(units)} {shareWord(units)} <span className="text-md text-stone">for {formatCents(cost)}</span></> : <>{formatCents(cost)} <span className="text-md text-stone">for {formatUnits(units)} {shareWord(units)}</span></>
           ) : (
             <span className="text-stone">—</span>
           )}
         </p>
         {capped && mode === "dollars" && !problem ? <p className="mt-2 text-sm text-notice">Only {formatUnits(remaining)} shares are left, so this buys all of them for {formatCents(cost!)}.</p> : null}
-        {problem && (amount || sharesText) ? <p className="mt-2 text-sm text-loss" role="alert">{problem}</p> : null}
-        <Button size="lg" className="mt-6" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
+        {!problem ? null : !showProblem ? <p className="mt-2 text-xs text-stone">{mode === "dollars" ? "Enter an amount to continue." : "Enter a number of shares to continue."}</p> : null}
+        <Button size="lg" className="mt-6 w-full sm:w-auto" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
       </div>
 
       {review && units !== null && cost !== null ? (

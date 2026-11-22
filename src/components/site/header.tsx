@@ -6,6 +6,7 @@ import { prisma } from "@/lib/db";
 import { formatCents } from "@/lib/domain/money";
 import { currentUser } from "@/lib/session";
 import { signOutAction } from "@/app/(auth)/actions";
+import { MenuCloser } from "./menu-closer";
 import { Wordmark } from "./wordmark";
 
 export function DemoBanner() {
@@ -47,6 +48,7 @@ export async function SiteHeader() {
 
   return (
     <header className="no-print border-b border-rule bg-paper">
+      <MenuCloser />
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-10 focus:z-50 focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:text-paper">
         Skip to content
       </a>
@@ -68,12 +70,12 @@ export async function SiteHeader() {
                   <span className="num text-ink">{formatCents(user.wallet.availableCents)}</span>
                 </Link>
               ) : null}
-              <Link href="/notifications" className="relative text-ink-soft hover:text-ink" aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}>
+              <Link href="/notifications" className="relative flex size-11 items-center justify-center text-ink-soft hover:text-ink" aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}>
                 <Bell aria-hidden className="size-5" strokeWidth={1.5} />
-                {unread ? <span aria-hidden className="absolute -right-1 -top-1 size-2 rounded-full bg-accent ring-2 ring-paper" /> : null}
+                {unread ? <span aria-hidden className="absolute right-2 top-2 size-2 rounded-full bg-accent ring-2 ring-paper" /> : null}
               </Link>
-              <details className="group relative">
-                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">
+              <details data-menu className="group relative">
+                <summary className="flex h-11 cursor-pointer list-none items-center gap-2 text-sm text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">
                   <span className="max-w-32 truncate">{user.name || "Account"}</span>
                   <svg aria-hidden viewBox="0 0 12 12" className="size-3 transition-transform group-open:rotate-180">
                     <path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" strokeWidth="1.25" />
@@ -89,15 +91,15 @@ export async function SiteHeader() {
                     ))}
                     {!isAdmin && onboarded ? (
                       <>
-                        <li><Link href="/wallet" className="block px-4 py-2 hover:bg-paper-deep">Wallet</Link></li>
-                        <li><Link href="/portfolio/statements" className="block px-4 py-2 hover:bg-paper-deep">Statements</Link></li>
-                        <li><Link href="/portfolio/activity" className="block px-4 py-2 hover:bg-paper-deep">Activity</Link></li>
+                        <li><Link href="/wallet" className="flex h-11 items-center px-4 hover:bg-paper-deep">Wallet</Link></li>
+                        <li><Link href="/portfolio/statements" className="flex h-11 items-center px-4 hover:bg-paper-deep">Statements</Link></li>
+                        <li><Link href="/portfolio/activity" className="flex h-11 items-center px-4 hover:bg-paper-deep">Activity</Link></li>
                       </>
                     ) : null}
-                    {!isAdmin && !onboarded ? <li><Link href="/onboarding" className="block px-4 py-2 hover:bg-paper-deep">Finish setting up</Link></li> : null}
+                    {!isAdmin && !onboarded ? <li><Link href="/onboarding" className="flex h-11 items-center px-4 hover:bg-paper-deep">Finish setting up</Link></li> : null}
                   </ul>
                   <form action={signOutAction} className="border-t border-rule px-4 pt-2">
-                    <button type="submit" className="text-sm text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink">Sign out</button>
+                    <button type="submit" className="h-11 text-sm text-ink-soft underline decoration-edge underline-offset-4 hover:text-ink">Sign out</button>
                   </form>
                 </div>
               </details>
@@ -105,7 +107,7 @@ export async function SiteHeader() {
           ) : (
             <>
               {/* Below md the nav links move into a menu so the bar fits a 375px screen. */}
-              <details className="group relative md:hidden">
+              <details data-menu className="group relative md:hidden">
                 <summary className="flex h-11 cursor-pointer list-none items-center text-sm text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">Menu</summary>
                 <ul className="absolute right-0 z-40 mt-2 w-48 rounded-md border border-ink bg-paper py-2 text-sm shadow-pop">
                   {nav.map((n) => (
@@ -114,7 +116,7 @@ export async function SiteHeader() {
                 </ul>
               </details>
               <Link href="/login" className={`${linkCls} flex h-11 items-center`}>Log in</Link>
-              <ButtonLink href="/signup" size="sm"><span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Open an account</span></ButtonLink>
+              <ButtonLink href="/signup" size="md"><span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Open an account</span></ButtonLink>
             </>
           )}
         </div>

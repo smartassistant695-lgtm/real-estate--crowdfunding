@@ -78,7 +78,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
             <p className="mt-3 text-xs text-stone">{BRAND.legalName}</p>
           </div>
           <div className="text-right">
-            <p className="font-serif text-xl">Account statement</p>
+            <h1 className="font-serif text-xl">Account statement</h1>
             <p className="num mt-1">{fmtDateLong(start)} – {fmtDateLong(end)}</p>
           </div>
         </header>
@@ -98,7 +98,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
           </div>
         </section>
 
-        <section className="grid gap-8 py-6 sm:grid-cols-2">
+        <section className="grid grid-cols-[minmax(0,1fr)] gap-8 py-6 sm:grid-cols-2">
           <div>
             <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Account value</h2>
             <table className="num w-full">

@@ -167,9 +167,9 @@ All in `src/components/ui` and `src/components/site`. Shown together at `/design
 | State | Rule |
 |---|---|
 | Hover | Colour shift only (buttons fill/invert; links darken their underline); no lift, no shadow |
-| Focus | 2px `accent` outline, 2px offset. On `ink` surfaces (toast, solid buttons) the outline is `paper` |
-| Disabled | `opacity-50` **and** a sentence next to it saying why ("Trading opens December 1") |
-| Error | Inline under the field (`loss`, `role="alert"`), plus a `Problem` note for the form. Never only a toast |
+| Focus | 2px `accent` outline, 2px offset (unlayered CSS, so no utility can weaken it). Inputs and selects draw it on their own edge (offset 0). On `ink` surfaces (toast, solid buttons) the outline is `paper` |
+| Disabled | Neutral, never a faded accent: `paper-deep` fill, `stone` text, 60% opacity, **and** a sentence next to it saying why ("Enter an amount to continue") |
+| Error | Inline under the field (`loss`, `role="alert"`, `aria-invalid`, `aria-describedby`), plus a `Problem` note unless it would repeat the field message. What the person typed stays in place. Plain sentences, never the validator's wording. Never only a toast |
 | Loading | Pending label on the button ("Placing order…"); text in `stone` ("Loading orders…") or a static `paper-deep` block. No spinners, no shimmer |
 | Empty | The `Empty` component: one serif sentence, one line of context, at most one action |
 | Success | A short toast ("Order placed.") and the changed data visible on the page |

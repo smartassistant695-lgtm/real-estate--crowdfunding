@@ -28,7 +28,7 @@ export default async function WalletPage() {
         <Stat label="Held for open buy orders" value={formatCents(wallet.heldCents)} note="Released if an order is cancelled or expires" />
         <Stat label="Invested this year" value={formatCents(invested)} note={`Annual limit ${formatCents(user.annualInvestmentLimitCents, { whole: true })}`} />
       </dl>
-      <div className="grid gap-12 pt-10 md:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 md:grid-cols-2">
         <section>
           <SectionHeading>Add funds</SectionHeading>
           <FundForm action={fundWalletAction} />

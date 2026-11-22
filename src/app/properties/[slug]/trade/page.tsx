@@ -86,7 +86,7 @@ export default async function TradePage({ params }: { params: Promise<{ slug: st
         {open ? `${open.period ? "" : "This is a demo window opened outside the usual first-of-the-month days. "}Orders not matched by then expire; shares and cash set aside for them are released.` : next ? `The next window runs ${fmtDay(next.opensAt)} to ${fmtDay(new Date(next.closesAt.getTime() - 1))}. You can read the order book in the meantime.` : "No window is scheduled yet."}
       </Note>
 
-      <div className="grid gap-12 pt-10 lg:grid-cols-[1fr_24rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <div className="min-w-0 space-y-14">
           <section aria-labelledby="book">
             <SectionHeading id="book" aside={`Appraised value ${formatCents(appraisal.navPerShareCents)} per share`}>Order book</SectionHeading>

@@ -63,7 +63,7 @@ export default async function PropertyPage({ params, searchParams }: Params) {
   return (
     <Page className="pb-8">
       {/* Masthead */}
-      <header className="grid gap-4 pb-6 pt-8 md:grid-cols-[1fr_auto] md:items-end md:pt-12">
+      <header className="grid gap-4 pb-6 pt-8 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:pt-12">
         <div>
           <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-x-2 text-sm text-stone">
             <Link href="/properties" className="hover:text-ink">Properties</Link>
@@ -102,7 +102,7 @@ export default async function PropertyPage({ params, searchParams }: Params) {
         Photographs are representative stock images from Unsplash{credits.length ? ` (${credits.join(", ")})` : ""}, not this property. Demo only.
       </p>
 
-      <div className="mt-10 grid gap-12 lg:grid-cols-[1fr_22rem]">
+      <div className="mt-10 grid gap-12 lg:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="min-w-0">
           <Tabs tabs={tabs} current={tab} label="Property sections" />
           <div className="pt-8">
@@ -245,7 +245,7 @@ async function Overview({ p, settingsBand }: { p: Loaded; settingsBand: number }
         </section>
       ) : null}
 
-      <section aria-labelledby="neighborhood" className="grid gap-8 md:grid-cols-[1.3fr_1fr]">
+      <section aria-labelledby="neighborhood" className="grid grid-cols-[minmax(0,1fr)] gap-8 md:grid-cols-[1.3fr_1fr]">
         <div>
           <SectionHeading id="neighborhood">The neighborhood</SectionHeading>
           <p className="max-w-prose text-ink-soft">{p.neighborhood}</p>
@@ -399,7 +399,7 @@ async function Governance({ propertyId }: { propertyId: string }) {
       <SectionHeading>Votes on this property</SectionHeading>
       <ul>
         {proposals.map((pr) => (
-          <li key={pr.id} className="grid gap-2 border-b border-rule py-4 sm:grid-cols-[1fr_auto] sm:items-baseline">
+          <li key={pr.id} className="grid gap-2 border-b border-rule py-4 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline">
             <div>
               <p className="label">{PROPOSAL_TYPE[pr.type]}</p>
               <Link href={`/proposals/${pr.id}`} className="font-serif text-md underline-offset-4 hover:underline">{pr.title}</Link>

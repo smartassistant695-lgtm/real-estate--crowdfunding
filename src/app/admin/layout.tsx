@@ -21,7 +21,7 @@ const NAV = [
 export default async function AdminLayout({ children }: { children: ReactNode }) {
   await requireAdmin();
   return (
-    <div className="mx-auto grid w-full max-w-page gap-8 px-4 pb-8 md:grid-cols-[13rem_1fr] md:px-8">
+    <div className="mx-auto grid w-full max-w-page grid-cols-[minmax(0,1fr)] gap-8 px-4 pb-8 md:grid-cols-[13rem_minmax(0,1fr)] md:px-8">
       <nav aria-label="Admin" className="min-w-0 border-b border-rule pt-6 md:border-b-0 md:border-r md:pr-6 md:pt-14">
         <p className="label mb-3">Admin</p>
         <ul className="-mx-2 flex gap-1 overflow-x-auto pb-4 text-sm md:mx-0 md:-ml-2 md:flex-col md:pb-0">

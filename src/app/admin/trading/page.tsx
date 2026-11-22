@@ -20,7 +20,7 @@ export default async function AdminTrading() {
   return (
     <>
       <PageHeader title="Trading windows" lede={`A window opens automatically on the 1st of each month for ${settings.tradingWindowDays} days (the scheduled job keeps two months ahead). You can also schedule extra windows or open and close them by hand.`} />
-      <div className="grid gap-12 pt-10 xl:grid-cols-[1fr_20rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 xl:grid-cols-[minmax(0,1fr)_20rem]">
         <section aria-labelledby="list">
           <SectionHeading id="list">Windows</SectionHeading>
           <Table caption="Trading windows">

@@ -21,11 +21,27 @@ export async function guard(fn: () => Promise<ActionState | void>): Promise<Acti
   }
 }
 
+/** Replace the validation library's default wording with plain sentences; keep our own messages. */
+function friendly(issue: z.core.$ZodIssue): string {
+  const m = issue.message;
+  if (/^Invalid input: expected \w+, received (undefined|null)/.test(m)) return "This field is required.";
+  if (issue.code === "too_small" && /^Too small/.test(m)) {
+    const min = (issue as { minimum?: number | bigint }).minimum;
+    return (issue as { origin?: string }).origin === "string" ? (Number(min) <= 1 ? "This field is required." : `Enter at least ${min} characters.`) : `Enter ${min} or more.`;
+  }
+  if (issue.code === "too_big" && /^Too big/.test(m)) {
+    const max = (issue as { maximum?: number | bigint }).maximum;
+    return (issue as { origin?: string }).origin === "string" ? `Keep this to ${max} characters or fewer.` : `Enter ${max} or less.`;
+  }
+  if (/^Invalid (input|option|string|enum)/.test(m)) return "Check this value.";
+  return m;
+}
+
 export function zodFailure(e: z.ZodError): ActionState {
   const fieldErrors: Record<string, string> = {};
   for (const issue of e.issues) {
     const key = issue.path.join(".");
-    if (key && !fieldErrors[key]) fieldErrors[key] = issue.message;
+    if (key && !fieldErrors[key]) fieldErrors[key] = friendly(issue);
   }
   return { ok: false, message: Object.keys(fieldErrors).length ? "Please check the highlighted fields." : (e.issues[0]?.message ?? "Invalid input."), fieldErrors };
 }

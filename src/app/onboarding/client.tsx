@@ -76,7 +76,7 @@ export function FundForm({ action, cta = "Add funds" }: { action: FormAction; ct
               type="button"
               aria-pressed={amount === p}
               onClick={() => setAmount(p)}
-              className={cn("num h-10 flex-1 rounded-sm border text-sm", amount === p ? "border-ink bg-ink text-paper" : "border-rule bg-card hover:border-stone")}
+              className={cn("num h-10 flex-1 rounded-sm border text-sm", amount === p ? "border-ink bg-ink text-paper" : "border-edge bg-card hover:border-ink")}
             >
               ${p}
             </button>

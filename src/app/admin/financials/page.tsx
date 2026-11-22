@@ -40,7 +40,7 @@ export default async function AdminFinancials({ searchParams }: { searchParams: 
         <Button type="submit" variant="secondary" size="md">Show</Button>
       </form>
 
-      <div className="grid gap-12 pt-10 xl:grid-cols-[1fr_24rem]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 xl:grid-cols-[minmax(0,1fr)_24rem]">
         <section aria-labelledby="history">
           <SectionHeading id="history">{property.name}: recent months</SectionHeading>
           <Table caption="Monthly financials and dividends">

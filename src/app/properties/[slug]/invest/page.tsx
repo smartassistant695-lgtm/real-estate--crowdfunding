@@ -38,7 +38,7 @@ export default async function InvestPage({ params }: { params: Promise<{ slug: s
           {p.status === "TRADING" ? "Every share has been sold. You can buy from other investors during a trading window." : "Shares of this home cannot be bought right now."}
         </Empty>
       ) : (
-        <div className="grid gap-12 pt-10 lg:grid-cols-[1fr_22rem]">
+        <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_22rem]">
           <InvestForm
             action={buyAction}
             propertyId={p.id}

@@ -24,7 +24,7 @@ export default async function DividendPage({ params }: { params: Promise<{ id: s
   return (
     <>
       <PageHeader back={{ href: `/admin/financials?property=${d.propertyId}&month=${d.month}`, label: "Financials" }} title={`${d.property.name}, ${monthLabel(d.month)} dividend`} lede={`Holders on the record date, ${fmtDateTime(d.recordDate)}, are paid in proportion to their shares.`} actions={<Badge tone={tone[d.status]}>{d.status.toLowerCase()}</Badge>} />
-      <div className="grid gap-12 pt-10 xl:grid-cols-[22rem_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 xl:grid-cols-[22rem_1fr]">
         <section aria-labelledby="calc">
           <SectionHeading id="calc">The calculation</SectionHeading>
           <Facts rows={[

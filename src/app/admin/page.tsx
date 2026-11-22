@@ -50,7 +50,7 @@ export default async function AdminHome() {
         <Stat label="Funded properties" value={String(live.length)} note={`${offerings.length} ${offerings.length === 1 ? "offering" : "offerings"} open`} />
         <Stat label="Liquidity reserves" value={formatCents(reserves._sum.balanceCents ?? 0n)} note="Across all properties" />
       </dl>
-      <div className="grid gap-12 pt-10 xl:grid-cols-2">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 xl:grid-cols-2">
         <section aria-labelledby="tasks">
           <SectionHeading id="tasks">To do</SectionHeading>
           {tasks.length ? <ul className="text-sm">{tasks.map((t) => <li key={t.href + t.text} className="border-b border-rule py-3"><Link href={t.href} className="link">{t.text}</Link></li>)}</ul> : <p className="text-sm text-stone">Nothing needs attention.</p>}

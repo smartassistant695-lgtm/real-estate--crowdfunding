@@ -57,7 +57,7 @@ export function Badge({ children, tone = "neutral", className }: { children: Rea
 /* ---------- Table: dense, ruled, right-aligned numbers. ---------- */
 export function Table({ className, children, caption, ...rest }: ComponentProps<"table"> & { caption?: string }) {
   return (
-    <div className="-mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
+    <div className="relative -mx-4 overflow-x-auto px-4 md:mx-0 md:px-0">
       <table className={cn("w-full min-w-max text-sm md:min-w-0", className)} {...rest}>
         {caption ? <caption className="sr-only">{caption}</caption> : null}
         {children}

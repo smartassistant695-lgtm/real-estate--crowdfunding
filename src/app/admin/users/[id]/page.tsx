@@ -25,7 +25,7 @@ export default async function AdminUser({ params }: { params: Promise<{ id: stri
   return (
     <>
       <PageHeader back={{ href: "/admin/users", label: "Users" }} title={u.name || u.email} lede={u.email} />
-      <div className="grid gap-12 pt-10 xl:grid-cols-[22rem_1fr]">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 xl:grid-cols-[22rem_1fr]">
         <div className="space-y-12">
           <section aria-labelledby="profile">
             <SectionHeading id="profile">Account</SectionHeading>

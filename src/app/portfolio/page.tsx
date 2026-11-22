@@ -44,8 +44,9 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
       {bought ? <Note className="mt-8" title="Purchase confirmed">Your shares are in your portfolio below. Your money stays in escrow until the offering is fully funded.</Note> : null}
 
       {/* Headline: one large figure, the rest on a ruled row */}
-      <header className="grid gap-8 border-b border-ink pb-8 pt-10 md:grid-cols-[1.2fr_2fr] md:items-end md:pt-14">
+      <header className="grid grid-cols-[minmax(0,1fr)] gap-8 border-b border-ink pb-8 pt-10 md:grid-cols-[1.2fr_2fr] md:items-end md:pt-14">
         <div>
+          <h1 className="sr-only">Portfolio</h1>
           <p className="label">Total account value</p>
           <p className="num mt-2 font-serif text-3xl tracking-figure sm:text-4xl">
             <CountUpDollars cents={pf.totalCents.toString()} />
@@ -66,7 +67,7 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
         </Empty>
       ) : (
         <>
-          <div className="grid gap-12 pt-10 lg:grid-cols-[1fr_20rem]">
+          <div className="grid grid-cols-[minmax(0,1fr)] gap-12 pt-10 lg:grid-cols-[minmax(0,1fr)_20rem]">
             <section aria-label="Value over time">
               {series.length > 1 && first && lastSnap ? (
                 <ChartFrame

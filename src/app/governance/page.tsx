@@ -22,7 +22,7 @@ export default async function GovernancePage() {
     const t = proposalTally(p, p.votes);
     const mine = p.votes.find((v) => v.userId === user.id);
     return (
-      <li key={p.id} className="grid gap-3 border-b border-rule py-5 md:grid-cols-[1fr_14rem] md:items-start">
+      <li key={p.id} className="grid gap-3 border-b border-rule py-5 md:grid-cols-[minmax(0,1fr)_14rem] md:items-start">
         <div>
           <p className="text-sm text-stone">{p.property.name} · {PROPOSAL_TYPE[p.type]}</p>
           <Link href={`/proposals/${p.id}`} className="mt-1 block font-serif text-md underline-offset-4 hover:underline">{p.title}</Link>

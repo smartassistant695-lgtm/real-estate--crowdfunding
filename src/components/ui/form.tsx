@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useActionState, useContext, useEffect, useId, useRef, type ComponentProps, type ReactNode } from "react";
+import { createContext, startTransition, useActionState, useContext, useId, useRef, type ComponentProps, type FormEvent, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
 import { cn } from "@/lib/cn";
 import { Button } from "./button";
@@ -11,6 +11,7 @@ export type ActionState = { ok: boolean; message?: string; fieldErrors?: Record<
 export type FormAction = (prev: ActionState, formData: FormData) => Promise<ActionState>;
 
 const FormCtx = createContext<ActionState>(null);
+const PendingCtx = createContext(false);
 
 /**
  * Wraps a server action: shows field errors, a form-level message, and a toast on success.
@@ -33,25 +34,34 @@ export function ActionForm({
 } & Omit<ComponentProps<"form">, "action">) {
   const keyRef = useRef<string | null>(null);
   const toast = useToast();
-  const [state, formAction] = useActionState<ActionState, FormData>(async (prev, formData) => {
+  const [state, formAction, pending] = useActionState<ActionState, FormData>(async (prev, formData) => {
     if (idempotent) {
       keyRef.current ??= crypto.randomUUID();
       formData.set("idempotencyKey", keyRef.current);
     }
     const result = await action(prev, formData);
     if (result?.ok) keyRef.current = null;
+    // Toast from here, not from an effect: the form may already be gone (e.g. a cancelled order's row).
+    if (result?.ok && result.message && toastOnSuccess) toast(result.message);
     return result;
   }, null);
 
-  useEffect(() => {
-    if (state?.ok && state.message && toastOnSuccess) toast(state.message);
-  }, [state, toast, toastOnSuccess]);
+  // Submit through a transition instead of the native form action, so React does not reset the
+  // fields: after an error the person's input stays in place next to the message.
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget, (e.nativeEvent as SubmitEvent).submitter);
+    startTransition(() => formAction(fd));
+  };
+  // Don't repeat a sentence that is already shown under its field.
+  const duplicate = !!state?.message && Object.values(state.fieldErrors ?? {}).includes(state.message);
 
   return (
     <FormCtx.Provider value={state}>
-      <form action={formAction} className={className} noValidate={false} {...rest}>
+      <PendingCtx.Provider value={pending}>
+      <form action={formAction} onSubmit={onSubmit} className={className} noValidate={false} {...rest}>
         {children}
-        {state && !state.ok && state.message ? (
+        {state && !state.ok && state.message && !duplicate ? (
           <p role="alert" className="mt-4 border-y border-loss bg-loss-wash px-4 py-3 text-sm text-ink">
             <span className="label mr-2 text-loss!">Problem</span>
             {state.message}
@@ -64,6 +74,7 @@ export function ActionForm({
           </p>
         ) : null}
       </form>
+      </PendingCtx.Provider>
     </FormCtx.Provider>
   );
 }
@@ -197,9 +208,12 @@ export function Submit({
   pendingLabel = "Working…",
   ...rest
 }: ComponentProps<typeof Button> & { pendingLabel?: string }) {
-  const { pending } = useFormStatus();
+  const status = useFormStatus();
+  const pending = useContext(PendingCtx) || status.pending;
+  // Main submit buttons span the screen on phones (DESIGN.md small-screen rules).
+  const full = rest.variant !== "quiet" && rest.size !== "sm";
   return (
-    <Button type="submit" aria-disabled={pending || rest.disabled} disabled={pending || rest.disabled} {...rest}>
+    <Button type="submit" aria-disabled={pending || rest.disabled} disabled={pending || rest.disabled} {...rest} className={cn(full && "w-full sm:w-auto", rest.className)}>
       {pending ? pendingLabel : children}
     </Button>
   );
