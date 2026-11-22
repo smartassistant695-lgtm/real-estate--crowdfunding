@@ -72,8 +72,8 @@ test.describe("sign up to first investment", () => {
     await expect(row).toHaveCount(1);
     await expect(row.getByRole("cell").nth(1)).toHaveText("1.625");
     await expect(row.getByRole("cell").nth(2)).toHaveText("$26.00");
-    const cash = page.locator("div").filter({ has: page.getByText("Cash available", { exact: true }) }).last();
-    await expect(cash).toContainText("$74.00");
+    const cash = page.locator("dt", { hasText: /^Cash available$/ }).locator("xpath=following-sibling::dd[1]");
+    await expect(cash).toHaveText("$74.00");
 
     // And the books agree.
     const user = await db.user.findUniqueOrThrow({ where: { email }, include: { wallet: true, holdings: { include: { property: true } } } });
