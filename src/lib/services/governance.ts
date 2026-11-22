@@ -154,7 +154,9 @@ export async function finalizeProposal(input: { actorId: string | null; proposal
         consequence = " The property will be listed for sale. Proceeds are paid out when the sale closes.";
       } else {
         const years = p.extendYears ?? 1;
-        const back = property.status === "EXIT_VOTE" ? (property.preExitStatus ?? "TRADING") : property.status;
+        // If holders separately voted to sell while this vote was open, the property stays in exit.
+        const saleVote = await tx.proposal.findFirst({ where: { propertyId: property.id, type: "SELL_PROPERTY", status: "PASSED", isPlannedExit: false, finalizedAt: { gte: p.opensAt } } });
+        const back = property.status === "EXIT_VOTE" && !saleVote ? (property.preExitStatus ?? "TRADING") : property.status;
         await tx.property.update({ where: { id: property.id }, data: { plannedExitYear: property.plannedExitYear + years, status: back, preExitStatus: null } });
         consequence = ` The planned exit moves out ${years} year${years === 1 ? "" : "s"}, to ${property.plannedExitYear + years}. Holders will vote again then.`;
       }
@@ -264,7 +266,12 @@ export async function createExitVotes(now = new Date()): Promise<{ created: stri
  * rata share of: sale price − selling costs + the liquidity reserve + any rounding carry.
  * Closes the property and stores each holder's final return.
  */
-export async function recordSale(input: { actorId: string; propertyId: string; salePriceCents: bigint; saleCostsCents: bigint; idempotencyKey: string; ipAddress?: string | null; now?: Date }) {
+/**
+ * `finalOperatingCents` is the property's net rental income not covered by any paid dividend —
+ * the part-month up to closing — as reported by the manager on the closing statement. It is paid
+ * out with the proceeds, so no rent is left behind when the home is sold.
+ */
+export async function recordSale(input: { actorId: string; propertyId: string; salePriceCents: bigint; saleCostsCents: bigint; finalOperatingCents?: bigint; idempotencyKey: string; ipAddress?: string | null; now?: Date }) {
   const now = input.now ?? new Date();
   if (input.salePriceCents <= 0n) throw new DomainError("Enter the sale price.", "salePrice");
   if (input.saleCostsCents < 0n || input.saleCostsCents > input.salePriceCents) throw new DomainError("Selling costs must be between $0 and the sale price.", "saleCosts");
@@ -275,12 +282,15 @@ export async function recordSale(input: { actorId: string; propertyId: string; s
     const property = await lockProperty(tx, input.propertyId);
     if (property.status === "SOLD") throw new DomainError("This property has already been sold.");
     if (property.status !== "EXIT_VOTE") throw new DomainError("A sale can only be recorded while the property is in its exit process, after holders voted to sell.");
-    const passed = await tx.proposal.findFirst({ where: { propertyId: property.id, type: "SELL_PROPERTY", status: "PASSED" }, orderBy: { finalizedAt: "desc" } });
-    if (!passed) throw new DomainError("A sale can only be recorded after holders have passed a proposal to sell.");
-    const approved = await tx.dividendDistribution.findFirst({ where: { propertyId: property.id, status: "APPROVED" } });
-    if (approved) throw new DomainError(`Pay the approved ${monthLabel(approved.month)} dividend before recording the sale.`);
-    // Unapproved drafts are previews only (no money moved); the sale pays out everything instead.
-    await tx.dividendDistribution.deleteMany({ where: { propertyId: property.id, status: "DRAFT" } });
+    // The most recent decided vote on selling must be a yes: an old PASSED vote does not count if
+    // a later one failed.
+    const latest = await tx.proposal.findFirst({ where: { propertyId: property.id, type: "SELL_PROPERTY", status: { in: ["PASSED", "FAILED", "NO_QUORUM"] } }, orderBy: { finalizedAt: "desc" } });
+    if (!latest || latest.status !== "PASSED") throw new DomainError("A sale can only be recorded after holders have passed a proposal to sell.");
+    // Every ended month's rent must reach holders through its dividend before the books close.
+    const pending = await tx.dividendDistribution.findFirst({ where: { propertyId: property.id, status: { in: ["DRAFT", "APPROVED"] } }, orderBy: { month: "asc" } });
+    if (pending) throw new DomainError(`Approve and pay the ${monthLabel(pending.month)} dividend before recording the sale, so that month's rent reaches holders.`);
+    const finalOperating = input.finalOperatingCents ?? 0n;
+    if (finalOperating < 0n) throw new DomainError("Enter the final month's net income as zero or more. A loss is deducted as a selling cost.", "finalOperating");
 
     // Lock every wallet this sale touches — holders and owners of open orders — in one sorted batch.
     const [holderIds, orderOwners] = await Promise.all([
@@ -294,7 +304,7 @@ export async function recordSale(input: { actorId: string; propertyId: string; s
     const reserve = await tx.liquidityReserve.findUnique({ where: { propertyId: property.id } });
     const reserveCents = reserve?.balanceCents ?? 0n;
     const carryCents = property.dividendCarryCents;
-    const netCents = netSaleProceeds({ salePriceCents: input.salePriceCents, saleCostsCents: input.saleCostsCents, otherCashCents: reserveCents + carryCents });
+    const netCents = netSaleProceeds({ salePriceCents: input.salePriceCents, saleCostsCents: input.saleCostsCents, otherCashCents: reserveCents + carryCents + finalOperating });
 
     const holdings = await tx.holding.findMany({ where: { propertyId: property.id, shareUnits: { gt: 0n } } });
     if (holdings.length === 0) throw new DomainError("This property has no holders to pay.");
@@ -305,6 +315,7 @@ export async function recordSale(input: { actorId: string; propertyId: string; s
     await lockWallets(tx, plan.map((p) => p.userId));
     const lines: LedgerLine[] = [
       { account: "EXTERNAL", propertyId: property.id, type: "EXIT_PROCEEDS", amountCents: -(input.salePriceCents - input.saleCostsCents), memo: `Sale of ${property.name}: ${formatCents(input.salePriceCents)} less ${formatCents(input.saleCostsCents)} selling costs` },
+      { account: "EXTERNAL", propertyId: property.id, type: "EXIT_PROCEEDS", amountCents: -finalOperating, memo: `Net rental income since the last dividend, from the closing statement` },
       { account: "LIQUIDITY_RESERVE", propertyId: property.id, type: "EXIT_PROCEEDS", amountCents: -reserveCents, memo: "Liquidity reserve returned to holders at sale" },
       { account: "PROPERTY_OPERATING", propertyId: property.id, type: "EXIT_PROCEEDS", amountCents: -carryCents, memo: "Undistributed rounding carry returned to holders at sale" },
     ];
@@ -325,7 +336,7 @@ export async function recordSale(input: { actorId: string; propertyId: string; s
     await tx.holding.updateMany({ where: { propertyId: property.id }, data: { shareUnits: 0n, costBasisCents: 0n, reservedUnits: 0n } });
     if (reserve) await tx.liquidityReserve.update({ where: { propertyId: property.id }, data: { balanceCents: 0n } });
     await tx.property.update({ where: { id: property.id }, data: { status: "SOLD", preExitStatus: null, salePriceCents: input.salePriceCents, saleCostsCents: input.saleCostsCents, soldAt: now, dividendCarryCents: 0n } });
-    await audit(tx, { actorId: input.actorId, action: "property.sold", entityType: "Property", entityId: property.id, before: { status: property.status }, after: { salePriceCents: input.salePriceCents, saleCostsCents: input.saleCostsCents, reserveCents, carryCents, netCents, holders: plan.length }, ipAddress: input.ipAddress });
+    await audit(tx, { actorId: input.actorId, action: "property.sold", entityType: "Property", entityId: property.id, before: { status: property.status }, after: { salePriceCents: input.salePriceCents, saleCostsCents: input.saleCostsCents, finalOperatingCents: finalOperating, reserveCents, carryCents, netCents, holders: plan.length }, ipAddress: input.ipAddress });
     afterCommit = await notify(tx, notices);
     await storeIdempotentResult(tx, input.idempotencyKey, { ok: true });
     return { replayed: false };

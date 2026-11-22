@@ -32,8 +32,8 @@ function assertClosedMonth(month: string, now = new Date()): void {
 }
 
 /** Save a month's income statement. Net income is always computed here, never typed in. */
-export async function saveFinancials(input: { actorId: string; propertyId: string; month: string; data: FinancialsInput; ipAddress?: string | null }) {
-  assertClosedMonth(input.month);
+export async function saveFinancials(input: { actorId: string; propertyId: string; month: string; data: FinancialsInput; ipAddress?: string | null; now?: Date }) {
+  assertClosedMonth(input.month, input.now);
   return runTx(async (tx) => {
     // Lock first, so a concurrent approval cannot slip between this check and the write.
     await lockProperty(tx, input.propertyId);
@@ -47,14 +47,14 @@ export async function saveFinancials(input: { actorId: string; propertyId: strin
       update: { ...input.data, netIncomeCents: net },
     });
     await audit(tx, { actorId: input.actorId, action: before ? "financials.update" : "financials.create", entityType: "MonthlyFinancials", entityId: row.id, before, after: row, ipAddress: input.ipAddress });
-    if (paid) await buildDraft(tx, input.propertyId, input.month, input.actorId);
+    if (paid) await buildDraft(tx, input.propertyId, input.month, input.actorId, input.now);
     return row;
   });
 }
 
 /** Create or refresh the DRAFT distribution for a month. Never touches an approved or paid one. */
-async function buildDraft(tx: Tx, propertyId: string, month: string, actorId: string | null) {
-  assertClosedMonth(month);
+async function buildDraft(tx: Tx, propertyId: string, month: string, actorId: string | null, now = new Date()) {
+  assertClosedMonth(month, now);
   const property = await lockProperty(tx, propertyId);
   const financials = await tx.monthlyFinancials.findUnique({ where: { propertyId_month: { propertyId, month } } });
   if (!financials) throw new DomainError(`Enter ${monthLabel(month)} financials before previewing a dividend.`);
@@ -88,16 +88,16 @@ async function buildDraft(tx: Tx, propertyId: string, month: string, actorId: st
   return dist;
 }
 
-export async function previewDistribution(input: { actorId: string | null; propertyId: string; month: string }) {
-  return runTx((tx) => buildDraft(tx, input.propertyId, input.month, input.actorId));
+export async function previewDistribution(input: { actorId: string | null; propertyId: string; month: string; now?: Date }) {
+  return runTx((tx) => buildDraft(tx, input.propertyId, input.month, input.actorId, input.now));
 }
 
-export async function approveDistribution(input: { actorId: string; distributionId: string; ipAddress?: string | null }) {
+export async function approveDistribution(input: { actorId: string; distributionId: string; ipAddress?: string | null; now?: Date }) {
   return runTx(async (tx) => {
     const found = await tx.dividendDistribution.findUnique({ where: { id: input.distributionId } });
     if (!found) throw new DomainError("Distribution not found.");
     // Refresh under the property lock so the approved figures reflect the current carry and holders.
-    const dist = await buildDraft(tx, found.propertyId, found.month, input.actorId);
+    const dist = await buildDraft(tx, found.propertyId, found.month, input.actorId, input.now);
     if (dist.status !== "DRAFT") throw new DomainError("Only a draft can be approved.");
     const earlier = await tx.dividendDistribution.findFirst({ where: { propertyId: dist.propertyId, month: { lt: dist.month }, status: { not: "PAID" } } });
     if (earlier) throw new DomainError(`Pay ${monthLabel(earlier.month)} first. Dividends are paid in order so rounding carry-over stays correct.`);
@@ -180,7 +180,7 @@ export async function createMonthlyDrafts(now = new Date()): Promise<{ month: st
     }
     const existing = await prisma.dividendDistribution.findUnique({ where: { propertyId_month: { propertyId: p.id, month } } });
     if (existing) continue;
-    await previewDistribution({ actorId: null, propertyId: p.id, month });
+    await previewDistribution({ actorId: null, propertyId: p.id, month, now });
     created.push(p.slug);
   }
   return { month, created, missingFinancials };

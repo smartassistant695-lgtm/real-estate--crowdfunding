@@ -16,11 +16,9 @@ export async function rateLimit(key: string, limit: number, windowSeconds: numbe
   return (rows[0]?.count ?? 1) <= limit;
 }
 
-/** Read a counter without adding to it. */
-export async function isRateLimited(key: string, limit: number, windowSeconds: number): Promise<boolean> {
-  const rows = await prisma.$queryRaw<{ count: number }[]>`
-    SELECT "count" FROM "RateLimit" WHERE "key" = ${key} AND "windowStart" >= now() - make_interval(secs => ${windowSeconds})`;
-  return (rows[0]?.count ?? 0) >= limit;
+/** Give back one attempt (e.g. after a successful login). Never goes below zero. */
+export async function rateLimitRefund(key: string): Promise<void> {
+  await prisma.$executeRaw`UPDATE "RateLimit" SET "count" = GREATEST("count" - 1, 0) WHERE "key" = ${key}`;
 }
 
 /**
@@ -30,6 +28,10 @@ export async function isRateLimited(key: string, limit: number, windowSeconds: n
  */
 export async function clientIp(): Promise<string> {
   const h = await headers();
+  // Proxy headers are only meaningful behind a proxy that overwrites them. On Vercel (VERCEL=1) the
+  // edge does; elsewhere set TRUST_PROXY=1 only if your proxy does. Otherwise every request shares
+  // one bucket, which still caps abuse without trusting anything the client sent.
+  if (process.env.VERCEL !== "1" && process.env.TRUST_PROXY !== "1") return "untrusted";
   const platform = h.get("x-vercel-forwarded-for") ?? h.get("x-real-ip");
   if (platform) return platform.split(",")[0]!.trim();
   const hops = h.get("x-forwarded-for")?.split(",").map((x) => x.trim()).filter(Boolean) ?? [];

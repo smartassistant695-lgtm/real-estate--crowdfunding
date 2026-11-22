@@ -395,7 +395,8 @@ async function main() {
   // A special demo window that is open right now, so trading can be tried immediately after
   // seeding. It has no `period`: it is not one of the regular first-of-the-month windows.
   const todayStart = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.getUTCDate()));
-  await prisma.tradingWindow.create({ data: { opensAt: new Date(todayStart.getTime() - 2 * DAY), closesAt: new Date(todayStart.getTime() + 12 * DAY), status: "OPEN" } });
+  const demoClose = Math.min(todayStart.getTime() + 12 * DAY, monthStart(-1).getTime()); // never overlaps next month's window
+  await prisma.tradingWindow.create({ data: { opensAt: new Date(todayStart.getTime() - 2 * DAY), closesAt: new Date(demoClose), status: "OPEN" } });
   const next = monthStart(-1);
   await prisma.tradingWindow.create({ data: { period: monthKey(next), opensAt: next, closesAt: new Date(next.getTime() + settings.tradingWindowDays * DAY), status: "SCHEDULED" } });
 

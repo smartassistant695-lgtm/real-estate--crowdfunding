@@ -4,7 +4,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { clientIp, isRateLimited, rateLimit } from "@/lib/rate-limit";
+import { clientIp, rateLimit, rateLimitRefund } from "@/lib/rate-limit";
 
 class RateLimited extends CredentialsSignin {
   code = "rate_limited";
@@ -30,13 +30,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         // Per IP: every attempt counts. Per account: only FAILED attempts count, so the owner's
         // own successful logins never use up the budget.
         if (!(await rateLimit(`login:ip:${ip}`, 30, 600))) throw new RateLimited();
-        if (await isRateLimited(`login:fail:${email}`, 8, 900)) throw new RateLimited();
+        // Count the attempt atomically BEFORE checking the password, so parallel guesses cannot all
+        // slip under the limit; give it back on success. Trade-off (accepted, documented): someone
+        // who knows an email can lock that account out for 15 minutes with 8 wrong guesses.
+        if (!(await rateLimit(`login:fail:${email}`, 8, 900))) throw new RateLimited();
         const user = await prisma.user.findUnique({ where: { email } });
         const valid = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
-        if (!user || !valid) {
-          await rateLimit(`login:fail:${email}`, 8, 900);
-          return null;
-        }
+        if (!user || !valid) return null;
+        await rateLimitRefund(`login:fail:${email}`);
         return { id: user.id, email: user.email, name: user.name, role: user.role, sv: user.sessionVersion };
       },
     }),
