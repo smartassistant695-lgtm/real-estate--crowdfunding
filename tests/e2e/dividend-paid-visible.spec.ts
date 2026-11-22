@@ -24,7 +24,7 @@ test("admin approves and pays last month's draft dividend; the investor sees it"
   const row = admin.getByRole("table", { name: "Monthly financials and dividends" }).getByRole("row").filter({ hasText: label });
   await row.getByRole("link", { name: "draft" }).click();
   await admin.waitForURL(`**/admin/dividends/${draft.id}`);
-  await expect(admin.getByRole("heading", { name: `${label} dividend · ${PROPERTY}` })).toBeVisible();
+  await expect(admin.getByRole("heading", { name: `${PROPERTY}, ${label} dividend` })).toBeVisible();
 
   await admin.getByRole("button", { name: "Approve" }).click();
   const approveDialog = admin.getByRole("dialog");
@@ -51,7 +51,7 @@ test("admin approves and pays last month's draft dividend; the investor sees it"
   const me = await newUserPage(DEMO.investor.email, DEMO.investor.password);
   await me.goto("/notifications");
   await expect(me.getByRole("link", { name: `${amount} dividend from ${PROPERTY}` })).toBeVisible();
-  await expect(me.getByText(`Your share of ${label} rent from ${PROPERTY} is in your wallet: ${amount}.`)).toBeVisible();
+  await expect(me.getByText(`Your share of ${label} rent from ${PROPERTY} has been added to your wallet.`)).toBeVisible();
 
   await me.goto("/portfolio/activity?show=dividends");
   const entry = me.getByRole("table", { name: "Account activity" }).getByRole("row").filter({ hasText: `${label} rent dividend from ${PROPERTY}` });
