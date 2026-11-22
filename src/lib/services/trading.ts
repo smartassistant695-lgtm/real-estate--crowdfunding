@@ -22,6 +22,21 @@ export async function openWindowFor(tx: Tx | typeof prisma, propertyId: string, 
   });
 }
 
+/**
+ * Inside a transaction: find the open window for a property and hold a SHARE lock on it, so a
+ * concurrent close (which takes FOR UPDATE on the same row) waits for this order to commit and
+ * then expires it, instead of the order landing in a window that has just closed.
+ * Lock order everywhere: trading window → property → wallets (by user id).
+ */
+async function lockOpenWindow(tx: Tx, propertyId: string, now: Date): Promise<TradingWindow | null> {
+  const candidate = await openWindowFor(tx, propertyId, now);
+  if (!candidate) return null;
+  await tx.$queryRaw`SELECT "id" FROM "TradingWindow" WHERE "id" = ${candidate.id} FOR SHARE`;
+  const w = await tx.tradingWindow.findUnique({ where: { id: candidate.id } });
+  if (!w || w.status !== "OPEN" || w.closesAt.getTime() <= now.getTime()) return null;
+  return w;
+}
+
 export async function nextWindowFor(tx: Tx | typeof prisma, propertyId: string, now = new Date()): Promise<TradingWindow | null> {
   return tx.tradingWindow.findFirst({
     where: { status: "SCHEDULED", closesAt: { gt: now }, OR: [{ propertyId }, { propertyId: null }] },
@@ -56,20 +71,21 @@ export type PlaceOrderInput = {
 export async function placeOrder(input: PlaceOrderInput): Promise<{ orderId: string; filledUnits: bigint; status: string; replayed: boolean }> {
   const now = input.now ?? new Date();
   let afterCommit: (() => Promise<void>) | undefined;
-  const transfers: { from: string; to: string; units: bigint; ref: string }[] = [];
+  let transfers: { from: string; to: string; units: bigint; ref: string }[] = [];
 
   const result = await runTx(async (tx) => {
+    transfers = []; // runTx may retry this callback; start each attempt clean
     const replay = (await claimIdempotencyKey(tx, input.idempotencyKey, input.userId, "placeOrder")) as { orderId: string; filledUnits: string; status: string } | null;
     if (replay) return { orderId: replay.orderId, filledUnits: BigInt(replay.filledUnits), status: replay.status, replayed: true };
 
     const settings = await getSettings(tx);
+    const window = await lockOpenWindow(tx, input.propertyId, now);
     const property = await lockProperty(tx, input.propertyId);
     const user = await tx.user.findUniqueOrThrow({ where: { id: input.userId } });
 
     if (user.kycStatus !== "APPROVED") throw new DomainError("Your identity check must be approved before you can trade.");
     if (!user.tradingDisclosureAcceptedAt) throw new DomainError("Please read and accept the trading disclosure first.");
     if (property.status !== "TRADING") throw new DomainError("Shares of this property are not trading right now.");
-    const window = await openWindowFor(tx, property.id, now);
     if (!window) throw new DomainError("The trading window is closed. Orders can only be placed while a window is open.");
 
     if (input.units <= 0n || input.units % ORDER_LOT_UNITS !== 0n) throw new DomainError("Enter a quantity in steps of 0.01 share.", "shares");
@@ -84,9 +100,17 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{ orderId: str
       );
     }
 
-    // Work out the matches first (read-only), so we know every wallet to lock.
+    // Work out the matches first (read-only), so we know every wallet to lock. Resting orders
+    // priced outside today's band (e.g. placed before a new appraisal) are not matched: the
+    // circuit breaker applies to the price a trade happens at, not only to the incoming limit.
     const resting = await tx.order.findMany({
-      where: { propertyId: property.id, windowId: window.id, side: input.side === "BUY" ? "SELL" : "BUY", status: { in: [...LIVE] } },
+      where: {
+        propertyId: property.id,
+        windowId: window.id,
+        side: input.side === "BUY" ? "SELL" : "BUY",
+        status: { in: [...LIVE] },
+        limitPriceCents: { gte: band.minCents, lte: band.maxCents },
+      },
     });
     const incomingBook: BookOrder = { id: "incoming", userId: input.userId, side: input.side, limitPriceCents: input.limitPriceCents, remainingUnits: input.units, seq: Number.MAX_SAFE_INTEGER };
     const { fills } = matchOrder(incomingBook, resting.map(toBook));
@@ -95,11 +119,12 @@ export async function placeOrder(input: PlaceOrderInput): Promise<{ orderId: str
     let heldCents = 0n;
     if (input.side === "BUY") {
       heldCents = buyOrderHold(input.units, input.limitPriceCents);
-      const invested = await investedThisYear(tx, input.userId, now);
-      if (invested + heldCents > user.annualInvestmentLimitCents) {
-        throw new DomainError(`This order would take you over your annual investment limit of ${formatCents(user.annualInvestmentLimitCents, { whole: true })}.`, "shares");
-      }
       const wallet = wallets.get(input.userId)!;
+      // Cash already held for other open buy orders counts toward the limit too.
+      const invested = await investedThisYear(tx, input.userId, now);
+      if (invested + wallet.heldCents + heldCents > user.annualInvestmentLimitCents) {
+        throw new DomainError(`This order would take you over your annual investment limit of ${formatCents(user.annualInvestmentLimitCents, { whole: true })}, counting cash already set aside for your other open buy orders.`, "shares");
+      }
       if (wallet.availableCents < heldCents) {
         throw new DomainError(`This order needs ${formatCents(heldCents)} set aside, and you have ${formatCents(wallet.availableCents)} available.`, "shares");
       }
@@ -292,6 +317,7 @@ const fmtDay = (d: Date) => d.toLocaleDateString("en-US", { month: "long", day: 
 export async function openWindow(windowId: string, actorId: string | null, now = new Date()) {
   let afterCommit: (() => Promise<void>) | undefined;
   await runTx(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "TradingWindow" WHERE "id" = ${windowId} FOR UPDATE`;
     const w = await tx.tradingWindow.findUnique({ where: { id: windowId } });
     if (!w || w.status !== "SCHEDULED") throw new DomainError("Only a scheduled window can be opened.");
     if (w.closesAt.getTime() <= now.getTime()) throw new DomainError("This window's closing time has already passed.");
@@ -312,6 +338,7 @@ export async function openWindow(windowId: string, actorId: string | null, now =
 export async function closeWindow(windowId: string, actorId: string | null, now = new Date()) {
   let afterCommit: (() => Promise<void>) | undefined;
   await runTx(async (tx) => {
+    await tx.$queryRaw`SELECT "id" FROM "TradingWindow" WHERE "id" = ${windowId} FOR UPDATE`;
     const w = await tx.tradingWindow.findUnique({ where: { id: windowId } });
     if (!w || w.status !== "OPEN") throw new DomainError("Only an open window can be closed.");
     const notices = await expireOrders(tx, { windowId: w.id }, now);
@@ -334,13 +361,11 @@ export async function syncTradingWindows(now = new Date()): Promise<{ scheduled:
   for (const offset of [0, 1]) {
     const { opensAt, closesAt } = windowForMonth(now.getUTCFullYear(), now.getUTCMonth() + offset, settings.tradingWindowDays);
     if (closesAt.getTime() <= now.getTime()) continue;
-    const monthStart = opensAt;
-    const monthEnd = new Date(Date.UTC(opensAt.getUTCFullYear(), opensAt.getUTCMonth() + 1, 1));
-    const exists = await prisma.tradingWindow.findFirst({ where: { propertyId: null, opensAt: { gte: monthStart, lt: monthEnd } } });
-    if (!exists) {
-      await prisma.tradingWindow.create({ data: { propertyId: null, opensAt, closesAt, status: "SCHEDULED" } });
-      scheduled++;
-    }
+    // `period` is unique, so the month's window is created once even if an admin opened it early
+    // (which moves opensAt) or two cron runs overlap.
+    const period = monthKey(opensAt);
+    const created = await prisma.tradingWindow.createMany({ data: [{ propertyId: null, period, opensAt, closesAt, status: "SCHEDULED" }], skipDuplicates: true });
+    scheduled += created.count;
   }
   const toClose = await prisma.tradingWindow.findMany({ where: { status: "OPEN", closesAt: { lte: now } } });
   for (const w of toClose) await closeWindow(w.id, null, now);
@@ -373,12 +398,13 @@ export async function sellToReserve(input: { userId: string; propertyId: string;
     if (replay) return { proceedsCents: BigInt(replay.proceedsCents), tradeId: replay.tradeId, replayed: true };
 
     const settings = await getSettings(tx);
+    const window = await lockOpenWindow(tx, input.propertyId, now);
     const property = await lockProperty(tx, input.propertyId);
     const user = await tx.user.findUniqueOrThrow({ where: { id: input.userId } });
     if (user.kycStatus !== "APPROVED") throw new DomainError("Your identity check must be approved before you can sell.");
     if (!user.tradingDisclosureAcceptedAt) throw new DomainError("Please read and accept the trading disclosure first.");
     if (property.status !== "TRADING") throw new DomainError("Shares of this property are not trading right now.");
-    if (!(await openWindowFor(tx, property.id, now))) throw new DomainError("The trading window is closed. You can sell to the reserve while a window is open.");
+    if (!window) throw new DomainError("The trading window is closed. You can sell to the reserve while a window is open.");
     if (input.units <= 0n) throw new DomainError("Enter how many shares to sell.", "shares");
 
     await tx.$queryRaw`SELECT "id" FROM "LiquidityReserve" WHERE "propertyId" = ${property.id} FOR UPDATE`;

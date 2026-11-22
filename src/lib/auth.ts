@@ -4,7 +4,7 @@ import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { clientIp, rateLimit } from "@/lib/rate-limit";
+import { clientIp, isRateLimited, rateLimit } from "@/lib/rate-limit";
 
 class RateLimited extends CredentialsSignin {
   code = "rate_limited";
@@ -27,12 +27,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!parsed.success) return null;
         const email = parsed.data.email.toLowerCase().trim();
         const ip = await clientIp();
-        const [okIp, okEmail] = await Promise.all([rateLimit(`login:ip:${ip}`, 30, 600), rateLimit(`login:email:${email}`, 8, 600)]);
-        if (!okIp || !okEmail) throw new RateLimited();
+        // Per IP: every attempt counts. Per account: only FAILED attempts count, so the owner's
+        // own successful logins never use up the budget.
+        if (!(await rateLimit(`login:ip:${ip}`, 30, 600))) throw new RateLimited();
+        if (await isRateLimited(`login:fail:${email}`, 8, 900)) throw new RateLimited();
         const user = await prisma.user.findUnique({ where: { email } });
         const valid = await bcrypt.compare(parsed.data.password, user?.passwordHash ?? DUMMY_HASH);
-        if (!user || !valid) return null;
-        return { id: user.id, email: user.email, name: user.name, role: user.role };
+        if (!user || !valid) {
+          await rateLimit(`login:fail:${email}`, 8, 900);
+          return null;
+        }
+        return { id: user.id, email: user.email, name: user.name, role: user.role, sv: user.sessionVersion };
       },
     }),
   ],
@@ -41,12 +46,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       if (user) {
         token.uid = user.id;
         token.role = user.role ?? "INVESTOR";
+        token.sv = (user as { sv?: number }).sv ?? 0;
       }
       return token;
     },
     session({ session, token }) {
       session.user.id = token.uid as string;
       session.user.role = (token.role as "INVESTOR" | "ADMIN") ?? "INVESTOR";
+      session.user.sv = typeof token.sv === "number" ? token.sv : 0;
       return session;
     },
   },

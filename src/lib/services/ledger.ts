@@ -65,6 +65,11 @@ export type ReconcileReport = { ok: boolean; checkedAt: Date; ledgerSumCents: bi
  *  4. every liquidity reserve and rounding carry equals its ledger account.
  */
 export async function reconcile(): Promise<ReconcileReport> {
+  // One consistent snapshot, so concurrent activity cannot produce false alarms.
+  return prisma.$transaction((tx) => reconcileIn(tx), { isolationLevel: "RepeatableRead", timeout: 120_000 });
+}
+
+async function reconcileIn(prisma: Tx): Promise<ReconcileReport> {
   const issues: string[] = [];
   const total = await prisma.ledgerEntry.aggregate({ _sum: { amountCents: true } });
   const ledgerSumCents = total._sum.amountCents ?? 0n;

@@ -143,6 +143,7 @@ model User {
   tradingDisclosureAcceptedAt DateTime?
   fundedAt                    DateTime?
   onboardingCompletedAt       DateTime?
+  sessionVersion              Int       @default(0) // bumped on password change; older sessions stop working
   createdAt                   DateTime  @default(now())
   updatedAt                   DateTime  @updatedAt
 
@@ -240,6 +241,7 @@ model Property {
   lastTradeAt               DateTime?
   dividendCarryCents        BigInt         @default(0) // rounding cents carried to next month
   status                    PropertyStatus @default(COMING_SOON)
+  preExitStatus             PropertyStatus? // status to return to if a planned-exit vote does not pass
   fundingDeadline           DateTime?
   fundedAt                  DateTime?
   plannedExitYear           Int
@@ -402,6 +404,7 @@ model TradingWindow {
   opensAt    DateTime
   closesAt   DateTime
   status     WindowStatus @default(SCHEDULED)
+  period     String?      @unique // "YYYY-MM" for the scheduled global window of that month
   createdAt  DateTime     @default(now())
   updatedAt  DateTime     @updatedAt
   property   Property?    @relation(fields: [propertyId], references: [id])

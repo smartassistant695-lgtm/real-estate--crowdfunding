@@ -21,9 +21,22 @@ export type FinancialsInput = {
   notes: string;
 };
 
+const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
+/** A month's figures can be entered and paid only once the month is over. */
+function assertClosedMonth(month: string, now = new Date()): void {
+  if (!MONTH_RE.test(month)) throw new DomainError("Choose a month in the form YYYY-MM.", "month");
+  if (endOfMonth(month).getTime() >= now.getTime()) {
+    throw new DomainError(`${monthLabel(month)} has not ended yet. Its figures and dividend can be entered once the month is over.`, "month");
+  }
+}
+
 /** Save a month's income statement. Net income is always computed here, never typed in. */
 export async function saveFinancials(input: { actorId: string; propertyId: string; month: string; data: FinancialsInput; ipAddress?: string | null }) {
+  assertClosedMonth(input.month);
   return runTx(async (tx) => {
+    // Lock first, so a concurrent approval cannot slip between this check and the write.
+    await lockProperty(tx, input.propertyId);
     const paid = await tx.dividendDistribution.findUnique({ where: { propertyId_month: { propertyId: input.propertyId, month: input.month } } });
     if (paid && paid.status !== "DRAFT") throw new DomainError("This month's dividend is already approved or paid. Its financials can no longer be changed.");
     const before = await tx.monthlyFinancials.findUnique({ where: { propertyId_month: { propertyId: input.propertyId, month: input.month } } });
@@ -41,6 +54,7 @@ export async function saveFinancials(input: { actorId: string; propertyId: strin
 
 /** Create or refresh the DRAFT distribution for a month. Never touches an approved or paid one. */
 async function buildDraft(tx: Tx, propertyId: string, month: string, actorId: string | null) {
+  assertClosedMonth(month);
   const property = await lockProperty(tx, propertyId);
   const financials = await tx.monthlyFinancials.findUnique({ where: { propertyId_month: { propertyId, month } } });
   if (!financials) throw new DomainError(`Enter ${monthLabel(month)} financials before previewing a dividend.`);
@@ -104,6 +118,8 @@ export async function payDistribution(input: { actorId: string; distributionId: 
     const property = await lockProperty(tx, found.propertyId);
     const dist = await tx.dividendDistribution.findUniqueOrThrow({ where: { id: input.distributionId }, include: { payments: true } });
     if (dist.status === "PAID") throw new DomainError("This dividend has already been paid.");
+    if (dist.recordDate.getTime() >= (input.now ?? new Date()).getTime()) throw new DomainError("The record date for this dividend has not passed yet.");
+    if (property.status === "SOLD" || property.status === "CANCELLED") throw new DomainError("This property is closed; its pending dividends were settled at sale.");
     if (dist.status !== "APPROVED") throw new DomainError("Approve the distribution before paying it.");
     if (dist.carryInCents !== property.dividendCarryCents) {
       throw new DomainError("The rounding carry-over changed since this was approved. Re-open the preview and approve again.");

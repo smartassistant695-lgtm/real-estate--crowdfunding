@@ -85,16 +85,19 @@ export async function buyPrimary(input: {
       throw new DomainError(`The minimum investment is ${formatCents(settings.minInvestmentCents, { whole: true })}.`, "amount");
     }
 
+    // Lock the wallet BEFORE reading the year-to-date total, so two purchases by the same user on
+    // different properties cannot both pass the limit check.
+    const wallet = (await lockWallets(tx, [input.userId])).get(input.userId)!;
     const invested = await investedThisYear(tx, input.userId, now);
-    if (invested + quote.costCents > user.annualInvestmentLimitCents) {
-      const room = user.annualInvestmentLimitCents > invested ? user.annualInvestmentLimitCents - invested : 0n;
+    if (invested + wallet.heldCents + quote.costCents > user.annualInvestmentLimitCents) {
+      const used = invested + wallet.heldCents;
+      const room = user.annualInvestmentLimitCents > used ? user.annualInvestmentLimitCents - used : 0n;
       throw new DomainError(
         `This would take you over your annual investment limit of ${formatCents(user.annualInvestmentLimitCents, { whole: true })}. You can invest ${formatCents(room)} more this year.`,
         "amount",
       );
     }
 
-    const wallet = (await lockWallets(tx, [input.userId])).get(input.userId)!;
     if (wallet.availableCents < quote.costCents) {
       throw new DomainError(`You have ${formatCents(wallet.availableCents)} available. Add funds to your wallet to invest ${formatCents(quote.costCents)}.`, "amount");
     }

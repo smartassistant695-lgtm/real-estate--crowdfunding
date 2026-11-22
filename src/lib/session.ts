@@ -12,7 +12,10 @@ export const currentUser = cache(async () => {
   const session = await auth();
   const id = session?.user?.id;
   if (!id) return null;
-  return prisma.user.findUnique({ where: { id }, include: { wallet: true } });
+  const user = await prisma.user.findUnique({ where: { id }, include: { wallet: true } });
+  // A password change bumps sessionVersion; sessions issued before it are no longer honoured.
+  if (!user || user.sessionVersion !== (session.user.sv ?? 0)) return null;
+  return user;
 });
 
 export type SessionUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;

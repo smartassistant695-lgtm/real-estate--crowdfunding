@@ -66,7 +66,8 @@ export async function requestPasswordResetAction(_prev: ActionState, fd: FormDat
   const parsed = z.object({ email: emailSchema }).safeParse(formObject(fd));
   if (!parsed.success) return zodFailure(parsed.error);
   const ip = await clientIp();
-  if (!(await rateLimit(`reset:ip:${ip}`, 5, 3600))) return { ok: false, message: "Too many requests. Please try again in an hour." };
+  const [okIp, okEmail] = await Promise.all([rateLimit(`reset:ip:${ip}`, 5, 3600), rateLimit(`reset:email:${parsed.data.email}`, 3, 3600)]);
+  if (!okIp || !okEmail) return { ok: false, message: "Too many requests. Please try again in an hour." };
   return guard(async () => {
     const user = await prisma.user.findUnique({ where: { email: parsed.data.email } });
     let demoLink = "";
@@ -87,13 +88,21 @@ export async function resetPasswordAction(_prev: ActionState, fd: FormData): Pro
   const parsed = z.object({ token: z.string().min(20).max(100), password: passwordSchema }).safeParse(formObject(fd));
   if (!parsed.success) return zodFailure(parsed.error);
   const result = await guard(async () => {
-    const row = await prisma.passwordResetToken.findUnique({ where: { tokenHash: sha256(parsed.data.token) } });
-    if (!row || row.usedAt || row.expiresAt.getTime() < Date.now()) return { ok: false, message: "This reset link has expired or was already used. Request a new one." };
+    const tokenHash = sha256(parsed.data.token);
     const passwordHash = await hashPassword(parsed.data.password);
-    await prisma.$transaction([
-      prisma.user.update({ where: { id: row.userId }, data: { passwordHash } }),
-      prisma.passwordResetToken.updateMany({ where: { userId: row.userId, usedAt: null }, data: { usedAt: new Date() } }),
-    ]);
+    const now = new Date();
+    const userId = await prisma.$transaction(async (tx) => {
+      // Consume the token atomically: of two simultaneous submissions, exactly one succeeds.
+      const row = await tx.passwordResetToken.findUnique({ where: { tokenHash } });
+      const used = await tx.passwordResetToken.updateMany({ where: { tokenHash, usedAt: null, expiresAt: { gt: now } }, data: { usedAt: now } });
+      if (!row || used.count !== 1) return null;
+      await tx.passwordResetToken.updateMany({ where: { userId: row.userId, usedAt: null }, data: { usedAt: now } });
+      // Bumping the version signs out every existing session for this account.
+      await tx.user.update({ where: { id: row.userId }, data: { passwordHash, sessionVersion: { increment: 1 } } });
+      return row.userId;
+    });
+    if (!userId) return { ok: false, message: "This reset link has expired or was already used. Request a new one." };
+    const row = { userId };
     await audit(prisma, { actorId: row.userId, action: "user.password_reset", entityType: "User", entityId: row.userId, ipAddress: await clientIp() });
   });
   if (!result?.ok) return result;

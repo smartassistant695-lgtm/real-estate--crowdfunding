@@ -10,12 +10,14 @@ export const MAX_DEPOSIT_CENTS = 2_500_000n; // $25,000 per simulated transfer
 export async function deposit(input: { userId: string; amountCents: bigint; idempotencyKey: string; ipAddress?: string | null }) {
   if (input.amountCents <= 0n) throw new DomainError("Enter an amount greater than $0.", "amount");
   if (input.amountCents > MAX_DEPOSIT_CENTS) throw new DomainError(`The most you can add at once is ${formatCents(MAX_DEPOSIT_CENTS, { whole: true })}.`, "amount");
-  const transfer = await providers.payments.initiateDeposit(input);
-  if (!transfer.ok) throw new DomainError(transfer.error);
-
   return runTx(async (tx) => {
     const replay = await claimIdempotencyKey(tx, input.idempotencyKey, input.userId, "deposit");
     if (replay) return { replayed: true };
+    // The provider is called only after this request's key is claimed, and with the same key, so a
+    // replay never starts a second transfer. A live ACH provider settles days later: the real
+    // adapter must record a PENDING transfer here and credit the wallet from its webhook instead.
+    const transfer = await providers.payments.initiateDeposit(input);
+    if (!transfer.ok) throw new DomainError(transfer.error);
     await lockWallets(tx, [input.userId]);
     await tx.wallet.update({ where: { userId: input.userId }, data: { availableCents: { increment: input.amountCents } } });
     await tx.user.updateMany({ where: { id: input.userId, fundedAt: null }, data: { fundedAt: new Date() } });
@@ -38,6 +40,8 @@ export async function withdraw(input: { userId: string; amountCents: bigint; ide
     if (wallet.availableCents < input.amountCents) {
       throw new DomainError(`You have ${formatCents(wallet.availableCents)} available to withdraw. Cash held for open buy orders cannot be withdrawn.`, "amount");
     }
+    // Same key as the claim above, so a retried transaction cannot send the money twice. A live
+    // provider needs the PENDING-then-webhook pattern described in deposit().
     const transfer = await providers.payments.initiateWithdrawal(input);
     if (!transfer.ok) throw new DomainError(transfer.error);
     await tx.wallet.update({ where: { userId: input.userId }, data: { availableCents: { decrement: input.amountCents } } });
@@ -68,15 +72,17 @@ export async function adjust(input: { actorId: string; userId: string; amountCen
 }
 
 /**
- * Cash a user has put into buying shares in the current calendar year (UTC), net of refunds.
- * Read from the ledger, so it cannot drift from what actually happened.
+ * Cash a user has put into buying shares in the current calendar year (UTC).
+ * Offering purchases count by the year they were made, unless refunded (a refund in January of a
+ * December purchase must not free up room in January). Secondary buys count by the year they
+ * settled. Cash held for open buy orders is added by the callers, which hold the wallet lock.
  */
 export async function investedThisYear(tx: Tx | typeof prisma, userId: string, now = new Date()): Promise<bigint> {
   const from = new Date(Date.UTC(now.getUTCFullYear(), 0, 1));
-  const sum = await tx.ledgerEntry.aggregate({
-    where: { userId, account: "USER_WALLET", type: { in: ["PRIMARY_PURCHASE", "TRADE_BUY", "REFUND"] }, createdAt: { gte: from } },
-    _sum: { amountCents: true },
-  });
-  const net = -(sum._sum.amountCents ?? 0n);
-  return net > 0n ? net : 0n;
+  const to = new Date(Date.UTC(now.getUTCFullYear() + 1, 0, 1));
+  const [primary, trades] = await Promise.all([
+    tx.primaryPurchase.aggregate({ where: { userId, refundedAt: null, createdAt: { gte: from, lt: to } }, _sum: { totalCents: true } }),
+    tx.ledgerEntry.aggregate({ where: { userId, account: "USER_WALLET", type: "TRADE_BUY", createdAt: { gte: from, lt: to } }, _sum: { amountCents: true } }),
+  ]);
+  return (primary._sum.totalCents ?? 0n) - (trades._sum.amountCents ?? 0n);
 }

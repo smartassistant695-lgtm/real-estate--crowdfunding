@@ -35,7 +35,7 @@ export async function runTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
   let attempt = 0;
   for (;;) {
     try {
-      return await prisma.$transaction(fn, { maxWait: 10_000, timeout: 30_000 });
+      return await prisma.$transaction(fn, { maxWait: 10_000, timeout: 120_000 });
     } catch (e) {
       if (attempt++ < 3 && isRetryable(e)) {
         await new Promise((r) => setTimeout(r, 25 * attempt + Math.random() * 50));

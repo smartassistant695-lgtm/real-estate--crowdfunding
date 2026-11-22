@@ -315,7 +315,7 @@ async function main() {
     const windowIsPast = windowCloses.getTime() < NOW.getTime();
 
     if (windowIsPast) {
-      const w = await prisma.tradingWindow.create({ data: { opensAt: start, closesAt: windowCloses, status: "OPEN" } });
+      const w = await prisma.tradingWindow.create({ data: { period: monthKey(start), opensAt: start, closesAt: windowCloses, status: "OPEN" } });
       for (const p of funded) {
         if (!tradable(p, start)) continue;
         for (let n = int(2, 4); n > 0; n--) await trade(p.id, int(4, 60), between(0.955, 1.05), at(k, int(1, 6), int(13, 20)));
@@ -392,11 +392,12 @@ async function main() {
   void renovationProposal;
 
   // ---------- current state ----------
-  // A window that is open right now, so trading can be tried immediately after seeding.
+  // A special demo window that is open right now, so trading can be tried immediately after
+  // seeding. It has no `period`: it is not one of the regular first-of-the-month windows.
   const todayStart = new Date(Date.UTC(NOW.getUTCFullYear(), NOW.getUTCMonth(), NOW.getUTCDate()));
   await prisma.tradingWindow.create({ data: { opensAt: new Date(todayStart.getTime() - 2 * DAY), closesAt: new Date(todayStart.getTime() + 12 * DAY), status: "OPEN" } });
   const next = monthStart(-1);
-  await prisma.tradingWindow.create({ data: { opensAt: next, closesAt: new Date(next.getTime() + settings.tradingWindowDays * DAY), status: "SCHEDULED" } });
+  await prisma.tradingWindow.create({ data: { period: monthKey(next), opensAt: next, closesAt: new Date(next.getTime() + settings.tradingWindowDays * DAY), status: "SCHEDULED" } });
 
   // Resting orders: a visible book on both trading properties.
   const soon = (m: number) => new Date(NOW.getTime() - m * 60 * 1000);

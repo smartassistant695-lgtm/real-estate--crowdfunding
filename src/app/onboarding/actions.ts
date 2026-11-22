@@ -32,6 +32,8 @@ export async function saveProfileAction(_prev: ActionState, fd: FormData): Promi
   const parsed = profileSchema.safeParse(formObject(fd));
   if (!parsed.success) return zodFailure(parsed.error);
   return guard(async () => {
+    // Verified identity details cannot be changed afterwards (and not while a check is running).
+    if (user.kycStatus === "APPROVED" || user.kycStatus === "PENDING") throw new DomainError("Your identity has been checked against these details, so they can no longer be changed here. Contact support to update them.");
     await prisma.user.update({ where: { id: user.id }, data: parsed.data });
     await audit(prisma, { actorId: user.id, action: "user.profile_saved", entityType: "User", entityId: user.id, after: { state: parsed.data.state }, ipAddress: await clientIp() });
     revalidatePath("/onboarding");
