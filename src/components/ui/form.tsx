@@ -67,7 +67,7 @@ export function ActionForm({
 }
 
 const control =
-  "block w-full rounded-sm border border-rule bg-card px-3 h-10 text-sm text-ink placeholder:text-stone " +
+  "block w-full rounded-sm border border-edge bg-card px-3 h-10 text-sm text-ink placeholder:text-stone " +
   "hover:border-stone focus:border-accent focus:outline-2 focus:outline-accent focus:outline-offset-0 " +
   "aria-[invalid=true]:border-loss disabled:bg-paper-deep disabled:text-stone";
 
@@ -87,7 +87,7 @@ function Shell({
   children,
 }: FieldShell & { id: string; children: ReactNode }) {
   return (
-    <div className={cn("space-y-1.5", className)}>
+    <div className={cn("space-y-2", className)}>
       <label htmlFor={id} className="label block text-ink-soft!">
         {label}
       </label>
@@ -181,7 +181,7 @@ export function Checkbox({ label, className, ...rest }: { label: ReactNode; clas
   const id = rest.id ?? auto;
   return (
     <div className={cn("flex items-start gap-3", className)}>
-      <input id={id} type="checkbox" className="mt-1 size-4 shrink-0 rounded-xs border border-stone accent-accent" {...rest} />
+      <input id={id} type="checkbox" className="mt-1 size-4 shrink-0 rounded-xs border border-edge accent-accent" {...rest} />
       <label htmlFor={id} className="text-sm text-ink">
         {label}
       </label>

@@ -97,7 +97,7 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
           {filtered ? <Link href={`/properties?view=${view}`} className="link text-sm">Clear filters</Link> : null}
           <div className="ml-auto flex text-xs" role="group" aria-label="Layout">
             {(["grid", "list"] as const).map((v) => (
-              <Link key={v} href={qs({ view: v })} aria-current={view === v ? "true" : undefined} className={cn("border border-ink px-3 py-1.5 capitalize first:rounded-l-sm last:-ml-px last:rounded-r-sm", view === v ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
+              <Link key={v} href={qs({ view: v })} aria-current={view === v ? "true" : undefined} className={cn("border border-ink px-3 py-2 capitalize first:rounded-l-sm last:-ml-px last:rounded-r-sm", view === v ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
                 {v}
               </Link>
             ))}

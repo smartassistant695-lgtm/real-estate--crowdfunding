@@ -11,7 +11,7 @@ import { Wordmark } from "./wordmark";
 export function DemoBanner() {
   return (
     <div className="no-print bg-ink text-paper">
-      <p className="mx-auto max-w-page px-4 py-1.5 text-center text-micro font-medium uppercase tracking-[0.12em] md:px-8">
+      <p className="mx-auto max-w-page px-4 py-2 text-center text-xs font-medium uppercase tracking-[0.12em] md:px-8">
         {BRAND.demoBanner}
       </p>
     </div>
@@ -69,11 +69,11 @@ export async function SiteHeader() {
                 </Link>
               ) : null}
               <Link href="/notifications" className="relative text-ink-soft hover:text-ink" aria-label={unread ? `Notifications, ${unread} unread` : "Notifications"}>
-                <Bell aria-hidden className="size-[18px]" strokeWidth={1.5} />
+                <Bell aria-hidden className="size-5" strokeWidth={1.5} />
                 {unread ? <span aria-hidden className="absolute -right-1 -top-1 size-2 rounded-full bg-accent ring-2 ring-paper" /> : null}
               </Link>
               <details className="group relative">
-                <summary className="flex cursor-pointer list-none items-center gap-1.5 text-sm text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center gap-2 text-sm text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">
                   <span className="max-w-32 truncate">{user.name || "Account"}</span>
                   <svg aria-hidden viewBox="0 0 12 12" className="size-3 transition-transform group-open:rotate-180">
                     <path d="M2 4.5 6 8.5 10 4.5" fill="none" stroke="currentColor" strokeWidth="1.25" />
@@ -84,17 +84,17 @@ export async function SiteHeader() {
                   <ul className="py-1 text-sm">
                     {nav.map((n) => (
                       <li key={n.href} className="md:hidden">
-                        <Link href={n.href} className="block px-4 py-1.5 hover:bg-paper-deep">{n.label}</Link>
+                        <Link href={n.href} className="block px-4 py-2 hover:bg-paper-deep">{n.label}</Link>
                       </li>
                     ))}
                     {!isAdmin && onboarded ? (
                       <>
-                        <li><Link href="/wallet" className="block px-4 py-1.5 hover:bg-paper-deep">Wallet</Link></li>
-                        <li><Link href="/portfolio/statements" className="block px-4 py-1.5 hover:bg-paper-deep">Statements</Link></li>
-                        <li><Link href="/portfolio/activity" className="block px-4 py-1.5 hover:bg-paper-deep">Activity</Link></li>
+                        <li><Link href="/wallet" className="block px-4 py-2 hover:bg-paper-deep">Wallet</Link></li>
+                        <li><Link href="/portfolio/statements" className="block px-4 py-2 hover:bg-paper-deep">Statements</Link></li>
+                        <li><Link href="/portfolio/activity" className="block px-4 py-2 hover:bg-paper-deep">Activity</Link></li>
                       </>
                     ) : null}
-                    {!isAdmin && !onboarded ? <li><Link href="/onboarding" className="block px-4 py-1.5 hover:bg-paper-deep">Finish setting up</Link></li> : null}
+                    {!isAdmin && !onboarded ? <li><Link href="/onboarding" className="block px-4 py-2 hover:bg-paper-deep">Finish setting up</Link></li> : null}
                   </ul>
                   <form action={signOutAction} className="border-t border-rule px-4 pt-2">
                     <button type="submit" className="text-sm text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink">Sign out</button>

@@ -145,7 +145,7 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
                           <>
                             <span className="num">{formatUnits(r.sellableUnits)}</span> now
                             {r.nextSellable ? <span className="block text-stone"><span className="num">{formatUnits(r.nextSellable.units)}</span> from {fmtDate(r.nextSellable.at)}</span> : null}
-                            {st === "TRADING" ? <Link href={`/properties/${r.property.slug}/trade`} className="link mt-0.5 block">Trade</Link> : null}
+                            {st === "TRADING" ? <Link href={`/properties/${r.property.slug}/trade`} className="link mt-1 block">Trade</Link> : null}
                           </>
                         )}
                       </Td>
@@ -155,12 +155,12 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
               </tbody>
               <tfoot>
                 <tr className="font-medium">
-                  <td className="py-2.5">Total</td>
+                  <td className="py-2">Total</td>
                   <td />
-                  <td className="num py-2.5 pr-4 text-right">{formatCents(pf.investedCents)}</td>
-                  <td className="num py-2.5 pr-4 text-right">{formatCents(pf.holdingsValueCents)}</td>
+                  <td className="num py-2 pr-4 text-right">{formatCents(pf.investedCents)}</td>
+                  <td className="num py-2 pr-4 text-right">{formatCents(pf.holdingsValueCents)}</td>
                   <td />
-                  <td className="num py-2.5 pr-4 text-right">{formatCents(pf.rows.reduce((a, r) => a + r.dividendsCents, 0n))}</td>
+                  <td className="num py-2 pr-4 text-right">{formatCents(pf.rows.reduce((a, r) => a + r.dividendsCents, 0n))}</td>
                   <td />
                 </tr>
               </tfoot>

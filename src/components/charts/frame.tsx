@@ -43,12 +43,12 @@ export function ChartFrame({
         <div className="mt-2 max-h-64 overflow-auto border-y border-rule">
           <table className="w-full text-xs">
             <thead>
-              <tr>{table.head.map((h, i) => <th key={h} scope="col" className={`label py-1.5 pr-4 font-medium ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>
+              <tr>{table.head.map((h, i) => <th key={h} scope="col" className={`label py-2 pr-4 font-medium ${i ? "text-right" : "text-left"}`}>{h}</th>)}</tr>
             </thead>
             <tbody>
               {table.rows.map((r, i) => (
                 <tr key={i} className="border-t border-rule">
-                  {r.map((c, j) => <td key={j} className={`num py-1.5 pr-4 ${j ? "text-right" : ""}`}>{c}</td>)}
+                  {r.map((c, j) => <td key={j} className={`num py-2 pr-4 ${j ? "text-right" : ""}`}>{c}</td>)}
                 </tr>
               ))}
             </tbody>

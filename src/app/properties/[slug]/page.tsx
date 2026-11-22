@@ -98,7 +98,7 @@ export default async function PropertyPage({ params, searchParams }: Params) {
           ) : null}
         </div>
       ) : null}
-      <p className="mt-2 text-micro text-stone">
+      <p className="mt-2 text-xs text-stone">
         Photographs are representative stock images from Unsplash{credits.length ? ` (${credits.join(", ")})` : ""}, not this property. Demo only.
       </p>
 
@@ -134,7 +134,7 @@ export default async function PropertyPage({ params, searchParams }: Params) {
               <div className="mt-3">
                 <p className="num font-serif text-3xl">{formatCents(p.offeringPricePerShareCents)}</p>
                 <p className="text-sm text-ink-soft">per share · minimum {formatCents(settings.minInvestmentCents, { whole: true })}</p>
-                <div role="img" aria-label={`${formatBps(fundedBps, { decimals: 0 })} funded`} className="mt-4 h-1.5 bg-rule"><div className="h-full bg-accent" style={{ width: `${fundedBps / 100}%` }} /></div>
+                <div role="img" aria-label={`${formatBps(fundedBps, { decimals: 0 })} funded`} className="mt-4 h-2 bg-rule"><div className="h-full bg-accent" style={{ width: `${fundedBps / 100}%` }} /></div>
                 <p className="num mt-2 text-sm">
                   {formatBps(fundedBps, { decimals: 0 })} funded · {formatUnits(p.totalUnits - p.soldUnits, 0)} shares left
                 </p>

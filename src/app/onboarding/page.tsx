@@ -36,7 +36,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
         {STEPS.map((s, i) => (
           <li key={s.key} aria-current={i === index ? "step" : undefined} className={cn("border-t-2 pt-2", i <= index ? "border-ink" : "border-rule")}>
             <span className={cn("label", i === index && "text-ink!")}>
-              <span className="num mr-1.5">{i + 2}</span>
+              <span className="num mr-2">{i + 2}</span>
               <span className="hidden sm:inline">{s.label}</span>
             </span>
             {i < index ? <span className="sr-only"> (done)</span> : null}

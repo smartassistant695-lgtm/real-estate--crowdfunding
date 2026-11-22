@@ -52,7 +52,7 @@ export function InvestForm(props: Props) {
       <div className={cn(review && "hidden")}>
         <div className="mb-5 inline-flex text-sm" role="group" aria-label="Enter as">
           {(["dollars", "shares"] as const).map((m) => (
-            <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("border border-ink px-4 py-1.5 first:rounded-l-sm last:-ml-px last:rounded-r-sm", mode === m ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
+            <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("border border-ink px-4 py-2 first:rounded-l-sm last:-ml-px last:rounded-r-sm", mode === m ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
               {m === "dollars" ? "Dollar amount" : "Number of shares"}
             </button>
           ))}

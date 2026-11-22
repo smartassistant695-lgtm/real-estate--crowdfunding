@@ -25,7 +25,7 @@ export function Stat({
       <dd className={cn("num mt-1 font-serif tracking-tight", sizes[size], tone === "gain" && "text-gain", tone === "loss" && "text-loss")}>
         {value}
       </dd>
-      {note ? <dd className="mt-0.5 text-xs text-stone">{note}</dd> : null}
+      {note ? <dd className="mt-1 text-xs text-stone">{note}</dd> : null}
     </div>
   );
 }
@@ -43,7 +43,7 @@ export function Badge({ children, tone = "neutral", className }: { children: Rea
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center rounded-xs border px-1.5 text-micro font-medium uppercase tracking-[0.08em] whitespace-nowrap",
+        "inline-flex h-5 items-center rounded-xs border px-2 text-xs font-medium uppercase tracking-[0.08em] whitespace-nowrap",
         badgeTones[tone],
         className,
       )}
@@ -74,7 +74,7 @@ export function Th({ className, num, ...rest }: ComponentProps<"th"> & { num?: b
   );
 }
 export function Td({ className, num, ...rest }: ComponentProps<"td"> & { num?: boolean }) {
-  return <td className={cn("border-b border-rule py-2.5 pr-4 align-top last:pr-0", num && "num text-right", className)} {...rest} />;
+  return <td className={cn("border-b border-rule py-2 pr-4 align-top last:pr-0", num && "num text-right", className)} {...rest} />;
 }
 
 /* ---------- Tabs: links, so every tab has a URL and works without JavaScript. ---------- */
@@ -101,7 +101,7 @@ export function Tabs({
                 scroll={false}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "-mb-px inline-flex h-10 items-center gap-1.5 border-b-2 text-sm whitespace-nowrap",
+                  "-mb-px inline-flex h-10 items-center gap-2 border-b-2 text-sm whitespace-nowrap",
                   active ? "border-ink font-medium text-ink" : "border-transparent text-stone hover:text-ink",
                 )}
               >
@@ -161,7 +161,7 @@ export function Note({ children, tone = "neutral", title, className }: { childre
   const tones = { neutral: "border-ink", notice: "border-notice bg-notice-wash", loss: "border-loss bg-loss-wash" } as const;
   return (
     <div className={cn("border-l-2 py-2 pl-4 pr-3 text-sm text-ink-soft", tones[tone], className)}>
-      {title ? <p className="mb-0.5 font-medium text-ink">{title}</p> : null}
+      {title ? <p className="mb-1 font-medium text-ink">{title}</p> : null}
       {children}
     </div>
   );
@@ -172,7 +172,7 @@ export function Facts({ rows, className }: { rows: { label: ReactNode; value: Re
   return (
     <dl className={cn("text-sm", className)}>
       {rows.map((r, i) => (
-        <div key={i} className={cn("flex items-baseline justify-between gap-6 border-b border-rule py-2.5", r.strong && "border-ink font-medium")}>
+        <div key={i} className={cn("flex items-baseline justify-between gap-6 border-b border-rule py-2", r.strong && "border-ink font-medium")}>
           <dt className="text-ink-soft">{r.label}</dt>
           <dd className="num text-right">{r.value}</dd>
         </div>

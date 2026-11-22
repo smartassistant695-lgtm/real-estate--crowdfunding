@@ -56,10 +56,10 @@ export function PropertyCard({ p, layout = "grid", priority }: { p: PropertyCard
             <p className="label">{p.city}, {p.state}</p>
             <Badge tone={status.tone}>{status.label}</Badge>
           </div>
-          <h3 className="mt-1.5 text-lg leading-snug">
+          <h3 className="mt-2 text-lg leading-snug">
             <Link href={`/properties/${p.slug}`} className="underline-offset-4 hover:underline">{p.name}</Link>
           </h3>
-          <p className="mt-0.5 text-sm text-ink-soft">
+          <p className="mt-1 text-sm text-ink-soft">
             {PROPERTY_TYPE[p.propertyType]} · {p.bedrooms} bed · {p.bathrooms} bath
           </p>
         </div>
@@ -68,14 +68,14 @@ export function PropertyCard({ p, layout = "grid", priority }: { p: PropertyCard
             {figures.map((f) => (
               <div key={f.label} className="border-b border-rule py-2 pr-2">
                 <dt className="label">{f.label}</dt>
-                <dd className="num mt-0.5 text-md">{f.value}</dd>
+                <dd className="num mt-1 text-md">{f.value}</dd>
               </div>
             ))}
           </dl>
           {funding ? (
             <div className="mt-3">
               <FundingBar bps={fundedBps} label={`${formatBps(fundedBps, { decimals: 0 })} funded`} />
-              {p.fundingDeadline ? <p className="mt-1.5 text-xs text-stone">Offering closes {daysUntil(p.fundingDeadline)}</p> : null}
+              {p.fundingDeadline ? <p className="mt-2 text-xs text-stone">Offering closes {daysUntil(p.fundingDeadline)}</p> : null}
             </div>
           ) : null}
         </div>

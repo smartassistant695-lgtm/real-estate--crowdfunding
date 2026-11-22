@@ -60,8 +60,8 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
   const holdingsValue = holdings.reduce((a, h) => a + h.value, 0n);
   let running = openingCash;
 
-  const th = "border-b border-ink py-1.5 text-left text-micro font-medium uppercase tracking-[0.08em] text-stone";
-  const td = "border-b border-rule py-1.5 align-top";
+  const th = "border-b border-ink py-2 text-left text-xs font-medium uppercase tracking-[0.08em] text-stone";
+  const td = "border-b border-rule py-2 align-top";
 
   return (
     <div className="mx-auto max-w-[52rem] px-4 pb-8 pt-8 print:max-w-none print:p-0">
@@ -71,7 +71,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
       </div>
 
       {/* The sheet */}
-      <article className="border border-rule bg-white px-6 py-8 text-[13px] leading-snug text-ink sm:px-12 sm:py-12 print:border-0 print:p-0">
+      <article className="border border-rule bg-white px-6 py-8 text-sm leading-snug text-ink sm:px-12 sm:py-12 print:border-0 print:p-0">
         <header className="flex items-start justify-between border-b-2 border-ink pb-5">
           <div>
             <Wordmark href={null} size="lg" />
@@ -105,7 +105,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
               <tbody>
                 <tr><td className={td}>Cash</td><td className={`${td} text-right`}>{money(closingCash)}</td></tr>
                 <tr><td className={td}>Shares, at appraised value</td><td className={`${td} text-right`}>{money(holdingsValue)}</td></tr>
-                <tr className="font-semibold"><td className="border-b-2 border-ink py-1.5">Total, {fmtDate(end)}</td><td className="border-b-2 border-ink py-1.5 text-right">{money(closingCash + holdingsValue)}</td></tr>
+                <tr className="font-semibold"><td className="border-b-2 border-ink py-2">Total, {fmtDate(end)}</td><td className="border-b-2 border-ink py-2 text-right">{money(closingCash + holdingsValue)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -117,7 +117,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
                 {summary.filter(([, v]) => v !== 0n).map(([label, v]) => (
                   <tr key={label}><td className={td}>{label}</td><td className={`${td} text-right`}>{money(v)}</td></tr>
                 ))}
-                <tr className="font-semibold"><td className="border-b-2 border-ink py-1.5">Closing cash balance</td><td className="border-b-2 border-ink py-1.5 text-right">{money(closingCash)}</td></tr>
+                <tr className="font-semibold"><td className="border-b-2 border-ink py-2">Closing cash balance</td><td className="border-b-2 border-ink py-2 text-right">{money(closingCash)}</td></tr>
               </tbody>
             </table>
           </div>
@@ -165,7 +165,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
           )}
         </section>
 
-        <footer className="mt-6 border-t border-ink pt-4 text-[11px] leading-relaxed text-stone">
+        <footer className="mt-6 border-t border-ink pt-4 text-xs leading-relaxed text-stone">
           <p>
             Share values use the most recent independent appraisal on or before the statement date and are estimates, not prices at which shares can be sold. Amounts in parentheses are money leaving your cash balance. This statement is generated from the account ledger.
           </p>
