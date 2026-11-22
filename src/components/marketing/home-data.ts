@@ -146,6 +146,7 @@ export async function loadHome() {
     voters: p.votes.length,
     quorumBps: p.quorumBps,
     passThresholdBps: p.passThresholdBps,
+    votingCapBps: p.votingCapBps,
   }));
 
   // A real case of shares trading below what holders paid, for the risk section.

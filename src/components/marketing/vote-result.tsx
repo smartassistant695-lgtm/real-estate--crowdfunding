@@ -18,6 +18,7 @@ export type VoteResultData = {
   voters: number;
   quorumBps: number;
   passThresholdBps: number;
+  votingCapBps: number;
 };
 
 const shares = (u: bigint) => Number(u / UNITS_PER_SHARE);
@@ -79,7 +80,10 @@ export function VoteResult({ v }: { v: VoteResultData }) {
           </div>
         ) : null}
       </div>
-      <p className="mt-4 text-sm text-ink-soft">{outcome}</p>
+      <p className="mt-4 text-sm text-ink-soft">
+        {outcome}
+        {v.participatingUnits > cast ? ` ${formatUnits(v.participatingUnits - cast, 0)} shares counted toward quorum but not the result: no holder’s vote counts for more than ${formatBps(v.votingCapBps, { decimals: 0 })} of the shares.` : null}
+      </p>
     </article>
   );
 }
