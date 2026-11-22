@@ -122,15 +122,45 @@ erDiagram
 
 `src/lib/providers/index.ts` is the only place that chooses an implementation.
 
-## 5. Milestones
+## 5. Milestones (status)
 
-- [ ] 1. Project setup, design tokens, design system components, `/design`
-- [ ] 2. Data model, migrations, seed, auth, roles, onboarding, mock KYC
-- [ ] 3. Marketplace, property detail, buying in the initial offering
-- [ ] 4. Wallet, ledger, portfolio dashboard, statements
-- [ ] 5. Monthly financials and the dividend workflow
-- [ ] 6. Order book, matching, trading windows, holding periods, circuit breaker, reserve buyback
-- [ ] 7. Governance: proposals, capped voting, quorum, exit votes, sale proceeds
-- [ ] 8. Admin panel, settings, audit log, notifications
-- [ ] 9. Marketing site, legal drafts, copy polish
-- [ ] 10. Security, accessibility, performance, full tests, deployment setup
+- [x] 1. Project setup, design tokens, design system components, `/design`
+- [x] 2. Data model, migrations, seed, auth, roles, onboarding, mock KYC
+- [x] 3. Marketplace, property detail, buying in the initial offering
+- [x] 4. Wallet, ledger, portfolio dashboard, statements
+- [x] 5. Monthly financials and the dividend workflow
+- [x] 6. Order book, matching, trading windows, holding periods, circuit breaker, reserve buyback
+- [x] 7. Governance: proposals, capped voting, quorum, exit votes, sale proceeds
+- [x] 8. Admin panel, settings, audit log, notifications
+- [x] 9. Marketing site, legal drafts, copy polish
+- [x] 10. Security hardening, accessibility pass, performance pass, full test suite, deployment setup
+
+## 6. What was built, and how it was checked
+
+The build followed a five-stage process: reference in → design system written down (`DESIGN.md`,
+reviewed with the Taste and Impeccable skills) → pages built only from `DESIGN.md` → a separate
+test pass at 1440px and 375px that only lists failures → fixes in rounds of three, re-tested.
+
+Independent agents cross-checked each other: the person who built a part never reviewed it.
+
+| Check | Result |
+|---|---|
+| Unit tests (domain math) | ~365 tests: money/rounding, dividends incl. remainders, matching, holding periods, circuit breaker, buyback cap, voting cap/quorum/pass, exit proceeds; seeded property-based tests for conservation |
+| Integration tests (Postgres) | 71 tests across purchase, dividend, trading-window, proposal and refund flows, each ending in `reconcile()`; includes a deterministic race test for closing a window while an order is placed |
+| End-to-end (Playwright) | sign-up → $26 purchase → portfolio; dividend paid → visible; trade settles between two users; votes → correct result |
+| Code reviews | two rounds on the financial services (17 findings, all fixed and re-verified), one on pages/admin/cron |
+| Design reviews | DESIGN.md review (13 findings applied), Section 9 "looks AI-generated?" review, Impeccable critique/audit |
+| Seed | runs the real services; ends with a full reconciliation that must pass |
+
+### Decisions added during the build
+
+| Decision | Choice |
+|---|---|
+| Lock order | trading window (FOR SHARE when trading, FOR UPDATE when opening/closing) → property → wallets by user id |
+| Annual limit | offering purchases by year made (unless refunded) + secondary buys settled this year + cash held for open buy orders |
+| Circuit breaker | applies to the incoming limit **and** to resting orders it would match; a new appraisal closes orders outside the new band |
+| Planned-exit vote | remembers the property's prior status and returns to it if holders vote to keep the home |
+| Sale | requires the most recent decided sale vote to be a pass, all ended months' dividends paid, and pays the final part-month income from the closing statement |
+| Dividends | only for months that have ended; drafts are refreshed until approved; payment re-checks the carry-in |
+| Sessions | a password reset bumps a session version, signing out every other session |
+| IP for rate limits | platform headers only on Vercel or with `TRUST_PROXY=1`; otherwise one shared bucket |
