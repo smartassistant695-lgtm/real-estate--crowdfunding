@@ -88,6 +88,8 @@
     font-size: var(--text-base);
     line-height: var(--text-base--line-height);
     font-feature-settings: "ss01";
+    /* Every figure on a financial site lines up: tabular, lining numerals everywhere. */
+    font-variant-numeric: tabular-nums lining-nums;
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
   }

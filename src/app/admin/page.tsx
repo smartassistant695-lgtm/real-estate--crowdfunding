@@ -31,7 +31,7 @@ export default async function AdminHome() {
     ...approved.map((d) => ({ href: `/admin/dividends/${d.id}`, text: `Pay the approved ${monthLabel(d.month)} dividend for ${d.property.name}` })),
     ...closing.filter((p) => p.status === "DRAFT").map((p) => ({ href: `/admin/proposals/${p.id}`, text: `Publish the draft proposal “${p.title}”` })),
     ...closing.filter((p) => p.status === "OPEN" && p.closesAt <= now).map((p) => ({ href: `/admin/proposals/${p.id}`, text: `Record the result of “${p.title}”` })),
-    ...(kycPending ? [{ href: "/admin/users?kyc=PENDING", text: `${kycPending} identity check(s) pending` }] : []),
+    ...(kycPending ? [{ href: "/admin/users?kyc=PENDING", text: `${kycPending} identity ${kycPending === 1 ? "check" : "checks"} waiting` }] : []),
   ];
 
   return (
@@ -46,8 +46,8 @@ export default async function AdminHome() {
       )}
       <dl className="grid grid-cols-2 gap-8 border-b border-rule py-8 lg:grid-cols-4">
         <Stat label="Assets under management" value={formatCentsWhole(aum)} note="Shares outstanding at appraised value" />
-        <Stat label="Investors" value={String(investors)} note={kycPending ? `${kycPending} awaiting identity check` : "All checks decided"} />
-        <Stat label="Funded properties" value={String(live.length)} note={`${offerings.length} offering(s) open`} />
+        <Stat label="Investors" value={String(investors)} note={kycPending ? `${kycPending} waiting for an identity check` : "No identity checks waiting"} />
+        <Stat label="Funded properties" value={String(live.length)} note={`${offerings.length} ${offerings.length === 1 ? "offering" : "offerings"} open`} />
         <Stat label="Liquidity reserves" value={formatCents(reserves._sum.balanceCents ?? 0n)} note="Across all properties" />
       </dl>
       <div className="grid gap-12 pt-10 xl:grid-cols-2">
@@ -59,7 +59,7 @@ export default async function AdminHome() {
           <SectionHeading id="calendar">Coming up</SectionHeading>
           <Table caption="Upcoming events">
             <tbody>
-              {windows.map((w) => <tr key={w.id}><Td>Trading window {w.status === "OPEN" ? "closes" : "opens"}</Td><Td num>{fmtDay(w.status === "OPEN" ? w.closesAt : w.opensAt)} ({daysUntil(w.status === "OPEN" ? w.closesAt : w.opensAt)})</Td></tr>)}
+              {windows.map((w) => <tr key={w.id}><Td>{w.status === "OPEN" ? `Trading window open through${w.period ? "" : " (demo window)"}` : "Trading window opens"}</Td><Td num>{w.status === "OPEN" ? fmtDay(new Date(w.closesAt.getTime() - 1)) : fmtDay(w.opensAt)} ({daysUntil(w.status === "OPEN" ? w.closesAt : w.opensAt)})</Td></tr>)}
               {offerings.map((o) => <tr key={o.id}><Td>Offering deadline: {o.name}</Td><Td num>{o.fundingDeadline ? `${fmtDay(o.fundingDeadline)} (${daysUntil(o.fundingDeadline)})` : "—"}</Td></tr>)}
               {closing.filter((p) => p.status === "OPEN").map((p) => <tr key={p.id}><Td>Vote closes: {p.property.name}</Td><Td num>{fmtDay(p.closesAt)} ({daysUntil(p.closesAt)})</Td></tr>)}
             </tbody>

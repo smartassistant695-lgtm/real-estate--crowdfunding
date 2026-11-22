@@ -154,16 +154,22 @@ async function main() {
     await prisma.property.update({ where: { id: p.id }, data: { entityName: entityName(p.sequence) } });
     props.set(s.slug, { id: p.id, seed: s, totalUnits, fundedAt });
 
-    const docs: [string, "OFFERING_CIRCULAR" | "OPERATING_AGREEMENT" | "APPRAISAL" | "INSPECTION" | "FINANCIAL_STATEMENT" | "TAX_FORM"][] = [
-      [`Offering circular — ${s.name}`, "OFFERING_CIRCULAR"],
-      [`Operating agreement — ${entityName(p.sequence)}`, "OPERATING_AGREEMENT"],
-      ["Pre-purchase inspection report", "INSPECTION"],
-      ["Pre-purchase appraisal", "APPRAISAL"],
+    // Realistic order: inspection and appraisal come before the offering documents; annual
+    // statements and K-1s are published in March for a year the home was owned in full or part.
+    type Cat = "OFFERING_CIRCULAR" | "OPERATING_AGREEMENT" | "APPRAISAL" | "INSPECTION" | "FINANCIAL_STATEMENT" | "TAX_FORM";
+    const docs: [string, Cat, Date][] = [
+      ["Pre-purchase inspection report", "INSPECTION", new Date(createdAt.getTime() - 19 * DAY)],
+      ["Pre-purchase appraisal", "APPRAISAL", new Date(createdAt.getTime() - 12 * DAY)],
+      [`Offering circular — ${s.name}`, "OFFERING_CIRCULAR", createdAt],
+      [`Operating agreement — ${entityName(p.sequence)}`, "OPERATING_AGREEMENT", createdAt],
     ];
-    if (fundedAt) docs.push([`Annual financial statement ${year - 1}`, "FINANCIAL_STATEMENT"], [`Schedule K-1 sample ${year - 1}`, "TAX_FORM"]);
+    if (fundedAt && fundedAt.getUTCFullYear() < year) {
+      const march = new Date(Date.UTC(year, 2, 14, 15));
+      if (march.getTime() < NOW.getTime()) docs.push([`Annual financial statement ${year - 1}`, "FINANCIAL_STATEMENT", march], [`Schedule K-1 ${year - 1} (sample)`, "TAX_FORM", new Date(march.getTime() + 2 * DAY)]);
+    }
     if (s.seedStatus !== "COMING_SOON") {
       await prisma.document.createMany({
-        data: docs.map(([title, category], i) => ({ propertyId: p.id, title, category, url: `/documents/placeholder?title=${encodeURIComponent(title)}`, publishedAt: new Date(createdAt.getTime() + i * DAY) })),
+        data: docs.map(([title, category, publishedAt]) => ({ propertyId: p.id, title, category, url: `/documents/placeholder?title=${encodeURIComponent(title)}`, publishedAt })),
       });
     }
     if (!fundedAt) await addAppraisal(p.id, s.purchasePrice, createdAt, "Pre-purchase appraisal", "Independent appraisal ordered before the purchase contract was signed.");
@@ -490,6 +496,8 @@ async function main() {
 
   // Old notifications are read; the recent ones stay unread.
   await prisma.notification.updateMany({ where: { userId: { not: demo.id } }, data: { readAt: NOW } });
+  // Window-closed notices from earlier windows are old news now that the demo window is open.
+  await prisma.notification.updateMany({ where: { type: "WINDOW_CLOSED" }, data: { readAt: NOW } });
   const recent = await prisma.notification.findMany({ where: { userId: demo.id }, orderBy: { createdAt: "desc" }, take: 5, select: { id: true } });
   await prisma.notification.updateMany({ where: { userId: demo.id, id: { notIn: recent.map((r) => r.id) } }, data: { readAt: NOW } });
   await prisma.idempotencyKey.deleteMany({ where: { key: { startsWith: "seed-" } } });

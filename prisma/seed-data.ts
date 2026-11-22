@@ -64,8 +64,8 @@ export const PROPERTIES: SeedProperty[] = [
       "A 1924 bungalow with a full-width front porch, original oak floors and a kitchen that was redone in 2019. It sits on a quiet block of similar houses, most of them owner-occupied. The current tenants, a couple who work at the nearby hospital, signed a two-year lease.",
     neighborhood:
       "Southern Orchards, just east of German Village. Parsons Avenue, three blocks away, has a grocery store, two coffee shops and a hardware store. Nationwide Children's Hospital is a ten-minute walk and is the area's largest employer.",
-    schoolsNote: "Placeholder: Columbus City Schools; nearest elementary 0.4 mi.",
-    transitNote: "Placeholder: COTA bus lines on Parsons Ave; downtown in about 12 minutes.",
+    schoolsNote: "Columbus City Schools district. School assignment is confirmed in the offering documents.",
+    transitNote: "Served by COTA buses along Parsons Avenue.",
     risks: [
       "The house is 100 years old. The roof was replaced in 2016, but the plumbing is partly original galvanized pipe and may need replacing within the holding period.",
       "One tenant. If they leave, the home earns nothing until it is re-let. It sat empty for most of one month last year.",
@@ -108,8 +108,8 @@ export const PROPERTIES: SeedProperty[] = [
       "A side-by-side brick duplex. Each half has two bedrooms, one bath, its own garage bay and its own furnace and water heater. Two leases mean the building rarely earns nothing: when one side turns over, the other still pays.",
     neighborhood:
       "South of the Country Club Plaza, between the University of Missouri–Kansas City and Rockhurst University. Renters here are mostly graduate students, medical residents and university staff.",
-    schoolsNote: "Placeholder: Kansas City Public Schools; two universities within one mile.",
-    transitNote: "Placeholder: Troost MAX bus rapid transit two blocks east.",
+    schoolsNote: "Kansas City Public Schools district; near UMKC and Rockhurst University.",
+    transitNote: "Served by RideKC, including the Troost MAX bus rapid transit line.",
     risks: [
       "University-area rentals turn over more often than family homes. Expect a vacancy on one side most summers.",
       "Built in 1948 with a shared sewer lateral. A repair to it would affect both units at once.",
@@ -152,8 +152,8 @@ export const PROPERTIES: SeedProperty[] = [
       "A three-bedroom cottage with a metal roof installed in 2021 and impact-rated windows. It was offered with a short planned holding period, and that period has now ended: holders are voting on whether to sell.",
     neighborhood:
       "Seminole Heights, north of downtown Tampa. A neighborhood of 1920s–1950s houses that has drawn restaurants and breweries along Florida Avenue over the past decade.",
-    schoolsNote: "Placeholder: Hillsborough County Public Schools; magnet high school 0.8 mi.",
-    transitNote: "Placeholder: HART bus on Nebraska Ave; I-275 access within one mile.",
+    schoolsNote: "Hillsborough County Public Schools district. School assignment is confirmed in the offering documents.",
+    transitNote: "Served by HART buses; close to I-275.",
     risks: [
       "Florida insurance premiums have risen sharply. This home's premium went up 23% at its last renewal and may rise again.",
       "The home is in a region exposed to hurricanes. It is not in a mandatory flood zone, but storm damage and deductibles are a real risk.",
@@ -196,8 +196,8 @@ export const PROPERTIES: SeedProperty[] = [
       "A single-story brick house on a third of an acre. Brick, a simple roofline and one level keep upkeep predictable. It is under contract; the purchase closes once every share is sold.",
     neighborhood:
       "East Raleigh, ten minutes from downtown and from WakeMed's main campus. A neighborhood of mid-century ranches that has seen steady renovation as buyers are priced out of areas closer in.",
-    schoolsNote: "Placeholder: Wake County Public Schools; elementary 0.6 mi.",
-    transitNote: "Placeholder: GoRaleigh route 18 on Poole Rd; I-440 within 1.5 miles.",
+    schoolsNote: "Wake County Public School System. School assignment is confirmed in the offering documents.",
+    transitNote: "Served by GoRaleigh buses; close to I-440.",
     risks: [
       "This offering is not yet funded. If every share is not sold by the deadline, the purchase is cancelled and all money is returned.",
       "There is no tenant yet. The projected rent is the manager's estimate from comparable homes nearby, not a signed lease.",
@@ -239,8 +239,8 @@ export const PROPERTIES: SeedProperty[] = [
       "A 1926 house converted long ago into four two-bedroom apartments, two up and two down, behind a shared front porch. Four leases spread the risk of a vacancy across four tenants. Three units are currently let; the fourth is being repainted.",
     neighborhood:
       "Meridian-Kessler, a north-side neighborhood of early-twentieth-century houses. College Avenue has restaurants, a food co-op and the Red Line rapid bus.",
-    schoolsNote: "Placeholder: Indianapolis Public Schools; Butler University 1.2 mi.",
-    transitNote: "Placeholder: IndyGo Red Line station one block south.",
+    schoolsNote: "Indianapolis Public Schools district; Butler University is nearby.",
+    transitNote: "On the IndyGo Red Line rapid bus corridor along College Avenue.",
     risks: [
       "This offering is not yet funded. If every share is not sold by the deadline, the purchase is cancelled and all money is returned.",
       "A 100-year-old building with four kitchens and four bathrooms has more to maintain than a single home. Maintenance will be a larger share of rent.",
@@ -282,8 +282,8 @@ export const PROPERTIES: SeedProperty[] = [
       "A two-bedroom Craftsman with a deep front porch and square columns. It is the smallest and least expensive home on the platform. The offering opens after the inspection report and appraisal are published.",
     neighborhood:
       "Crestwood South, east of downtown Birmingham. Small pre-war houses on hilly, tree-lined streets, close to the restaurants on Crestwood Boulevard and to UAB's medical district.",
-    schoolsNote: "Placeholder: Birmingham City Schools; elementary 0.5 mi.",
-    transitNote: "Placeholder: MAX Transit route on Crestwood Blvd; I-20 within one mile.",
+    schoolsNote: "Birmingham City Schools district. School assignment is confirmed in the offering documents.",
+    transitNote: "Served by MAX Transit buses; close to I-20.",
     risks: [
       "Not yet open for investment. The numbers shown are preliminary and may change before the offering opens.",
       "A lower-priced home means fixed costs such as a roof or HVAC replacement are a larger share of its value.",

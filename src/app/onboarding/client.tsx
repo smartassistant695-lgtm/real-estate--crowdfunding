@@ -25,7 +25,7 @@ export function KycPoller({ check }: { check: () => Promise<string> }) {
   }, [check, router]);
   return (
     <div role="status" className="flex items-center gap-4 border-y border-rule py-6">
-      <span aria-hidden className="size-2 animate-pulse rounded-full bg-accent" />
+      <span aria-hidden className="size-2 rounded-full bg-accent" />
       <p className="text-sm text-ink-soft">Checking your details. This usually takes a few seconds; you can stay on this page.</p>
     </div>
   );

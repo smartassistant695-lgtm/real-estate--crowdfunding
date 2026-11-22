@@ -141,7 +141,7 @@ export async function payDistribution(input: { actorId: string; distributionId: 
     for (const p of paying) {
       await tx.wallet.update({ where: { userId: p.userId }, data: { availableCents: { increment: p.amountCents } } });
       lines.push({ account: "USER_WALLET", userId: p.userId, propertyId: property.id, type: "DIVIDEND", amountCents: p.amountCents, memo: `${label} rent dividend from ${property.name}` });
-      notices.push({ userId: p.userId, type: "DIVIDEND_PAID", title: `${formatCents(p.amountCents)} dividend from ${property.name}`, body: `Your share of ${label} rent from ${property.name} is in your wallet: ${formatCents(p.amountCents)}.`, href: "/portfolio/activity" });
+      notices.push({ userId: p.userId, type: "DIVIDEND_PAID", title: `${formatCents(p.amountCents)} dividend from ${property.name}`, body: `Your share of ${label} rent from ${property.name} has been added to your wallet.`, href: "/portfolio/activity" });
     }
     await postLedger(tx, dist.id, lines, now);
     if (dist.reserveAllocationCents > 0n) {

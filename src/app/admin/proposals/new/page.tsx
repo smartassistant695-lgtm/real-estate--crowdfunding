@@ -28,8 +28,8 @@ export default async function NewProposal() {
           <Textarea label="Plain-English summary" name="summary" rows={3} required hint="One or two sentences a first-time investor understands." />
           <Textarea label="Full details" name="details" rows={8} required hint="Paragraphs, “- ” lists and **bold** are supported." />
           <div className="grid gap-5 md:grid-cols-2">
-            <Textarea label="In favour (manager)" name="pros" rows={4} hint="One “- ” point per line." />
-            <Textarea label="Against (manager)" name="cons" rows={4} hint="One “- ” point per line." />
+            <Textarea label="Arguments for (manager)" name="pros" rows={4} hint="One “- ” point per line." />
+            <Textarea label="Arguments against (manager)" name="cons" rows={4} hint="One “- ” point per line." />
           </div>
           <Textarea label="Financial impact" name="impact" rows={4} hint="One row per line: Label | Today | If it passes" />
           <Input label="Extend exit by (years)" name="extendYears" inputMode="numeric" hint="Only for “Extend exit date”: 1 or 2." className="max-w-form" />

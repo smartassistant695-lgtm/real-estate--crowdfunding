@@ -235,7 +235,7 @@ export async function createExitVotes(now = new Date()): Promise<{ created: stri
           title: `Planned exit: sell ${property.name} or hold one more year`,
           summary: `${property.name} has reached its planned exit year (${property.plannedExitYear}). Vote FOR to sell the home and pay out the proceeds. Vote AGAINST to keep renting it for one more year and vote again then.`,
           details: `When this property was offered, the plan was to sell it in **${property.plannedExitYear}**. That year is here, so the decision goes to the people who own it.\n\n- **FOR** — the manager lists the home for sale. When the sale closes, the proceeds (after selling costs), the liquidity reserve and any undistributed cash are paid to holders in proportion to their shares, and the property is closed.\n- **AGAINST** — the home stays rented and keeps paying monthly dividends. The planned exit moves to ${property.plannedExitYear + 1} and holders vote again.\n\nIf fewer than the required share of holders vote, the home is not sold and the exit date moves out one year.`,
-          pros: "- Realises the current value of the home in cash\n- Ends exposure to future repair costs and vacancies",
+          pros: "- Turns the current value of the home in cash\n- Ends exposure to future repair costs and vacancies",
           cons: "- Selling costs (typically 5–7% of the price) reduce proceeds\n- Monthly dividends stop\n- A sale is a taxable event for holders",
           financialImpact: appraisal
             ? [

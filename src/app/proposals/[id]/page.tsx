@@ -88,11 +88,11 @@ export default async function ProposalPage({ params }: { params: Promise<{ id: s
             <section aria-labelledby="case" className="grid gap-8 md:grid-cols-2">
               <h2 id="case" className="sr-only">For and against, from the manager</h2>
               <div>
-                <h3 className="mb-3 border-b border-ink pb-2 font-serif text-md">In favour</h3>
+                <h3 className="mb-3 border-b border-ink pb-2 font-serif text-md">Arguments for</h3>
                 <Markdown source={p.pros} className="text-sm text-ink-soft" />
               </div>
               <div>
-                <h3 className="mb-3 border-b border-ink pb-2 font-serif text-md">Against</h3>
+                <h3 className="mb-3 border-b border-ink pb-2 font-serif text-md">Arguments against</h3>
                 <Markdown source={p.cons} className="text-sm text-ink-soft" />
               </div>
             </section>

@@ -181,6 +181,7 @@ export default async function PropertyPage({ params, searchParams }: Params) {
             ...(latestFin ? [{ label: `Occupancy, ${monthLabel(latestFin.month, "short")}`, value: formatBps(latestFin.occupancyRateBps, { decimals: 0 }) }] : []),
             { label: "Planned exit", value: String(p.plannedExitYear) },
             { label: live ? "Shares outstanding" : "Shares offered", value: formatUnits(live ? outstanding : p.totalUnits, 0) },
+            ...(live && p.retiredUnits > 0n ? [{ label: "Retired through reserve buybacks", value: formatUnits(p.retiredUnits, 2) }] : []),
           ]} />
           <Facts className="mt-6" rows={[
             { label: "Bedrooms / baths", value: `${p.bedrooms} / ${p.bathrooms}` },
@@ -373,7 +374,7 @@ async function Documents({ propertyId }: { propertyId: string }) {
   if (docs.length === 0) return <Empty title="Documents are not published yet.">The offering circular, inspection report and appraisal are posted before an offering opens.</Empty>;
   return (
     <section>
-      <SectionHeading aside="Placeholders in this demo">Documents</SectionHeading>
+      <SectionHeading aside="Sample files in this demo">Documents</SectionHeading>
       <Table caption="Property documents">
         <thead><tr><Th>Document</Th><Th>Type</Th><Th>Published</Th></tr></thead>
         <tbody>

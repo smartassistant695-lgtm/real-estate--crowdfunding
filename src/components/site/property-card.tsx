@@ -38,7 +38,7 @@ export function PropertyCard({ p, layout = "grid", priority }: { p: PropertyCard
   const fundedBps = ratioBps(p.soldUnits, p.totalUnits);
   const funding = p.status === "FUNDING";
   const figures = [
-    { label: "Projected yield", value: formatBps(p.projectedAnnualYieldBps, { decimals: 1 }) },
+    { label: "Est. yield", value: formatBps(p.projectedAnnualYieldBps, { decimals: 1 }) },
     { label: p.priceLabel, value: formatCents(p.pricePerShareCents) },
     funding ? { label: "Funded", value: formatBps(fundedBps, { decimals: 0 }) } : { label: "Type", value: p.propertyType === "SINGLE_FAMILY" ? "House" : PROPERTY_TYPE[p.propertyType].replace("Small multifamily", "4 units") },
   ];

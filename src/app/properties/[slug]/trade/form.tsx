@@ -106,7 +106,7 @@ export function ReserveForm({ action, propertyId, priceCents, maxUnits, sellable
   return (
     <ActionForm action={action} idempotent className="max-w-form">
       <input type="hidden" name="propertyId" value={propertyId} />
-      <Input label="Shares to sell to the reserve" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={`Up to ${formatUnits(cap)} shares at ${formatCents(price)} each`} />
+      <Input label="Shares to sell to the reserve" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={`Up to ${formatUnits(cap, 2)} shares at ${formatCents(price)} each, while the reserve’s budget for this month lasts`} />
       <p className="num mt-3 text-sm" aria-live="polite">
         {proceeds !== null && units !== null && units > 0n && !tooMany ? <>You would receive <strong className="font-medium">{formatCents(proceeds)}</strong> immediately. The shares are retired.</> : tooMany ? <span className="text-loss">That is more than the reserve can buy from you right now.</span> : null}
       </p>

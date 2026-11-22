@@ -83,7 +83,7 @@ export default async function TradePage({ params }: { params: Promise<{ slug: st
     <Page className="pb-8">
       {header}
       <Note tone={open ? "neutral" : "notice"} className="mt-8" title={open ? `The trading window is open until ${closes} (${daysUntil(open.closesAt)})` : "The trading window is closed"}>
-        {open ? "Orders not matched by then expire; shares and cash set aside for them are released." : next ? `The next window runs ${fmtDay(next.opensAt)} to ${fmtDay(new Date(next.closesAt.getTime() - 1))}. You can read the order book in the meantime.` : "No window is scheduled yet."}
+        {open ? `${open.period ? "" : "This is a demo window opened outside the usual first-of-the-month days. "}Orders not matched by then expire; shares and cash set aside for them are released.` : next ? `The next window runs ${fmtDay(next.opensAt)} to ${fmtDay(new Date(next.closesAt.getTime() - 1))}. You can read the order book in the meantime.` : "No window is scheduled yet."}
       </Note>
 
       <div className="grid gap-12 pt-10 lg:grid-cols-[1fr_24rem]">
@@ -93,7 +93,7 @@ export default async function TradePage({ params }: { params: Promise<{ slug: st
             <OrderBook propertyId={p.id} />
           </section>
           <section aria-labelledby="mine">
-            <SectionHeading id="mine" aside={<Link href="/orders" className="link">All your orders</Link>}>Your open orders here</SectionHeading>
+            <SectionHeading id="mine" aside={<Link href="/orders" className="link">All your orders</Link>}>Your open orders</SectionHeading>
             {myOrders.length === 0 ? <p className="text-sm text-stone">You have no open orders for this property.</p> : (
               <Table caption="Your open orders">
                 <thead><tr><Th>Placed</Th><Th>Side</Th><Th num>Price</Th><Th num>Filled</Th><Th>Status</Th><Th num><span className="sr-only">Actions</span></Th></tr></thead>

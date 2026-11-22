@@ -56,7 +56,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
       const units = u._sum.shareUnits ?? 0n;
       return { p, units, price: n.price, asOf: n.asOf, value: valueOfUnits(units, n.price) };
     })
-    .sort((a, b) => (a.p.name < b.p.name ? -1 : 1));
+    .sort((a, b) => (a.p.entityName < b.p.entityName ? -1 : 1));
   const holdingsValue = holdings.reduce((a, h) => a + h.value, 0n);
   let running = openingCash;
 
@@ -126,7 +126,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
         <section className="py-4">
           <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Holdings at {fmtDate(end)}</h2>
           {holdings.length === 0 ? <p className="text-ink-soft">No shares held at month-end.</p> : (
-            <table className="w-full">
+            <div className="-mx-1 overflow-x-auto px-1"><table className="w-full min-w-[34rem] sm:min-w-0">
               <thead><tr><th className={th}>Security</th><th className={`${th} text-right`}>Shares</th><th className={`${th} text-right`}>Appraised / share</th><th className={`${th} text-right`}>Value</th></tr></thead>
               <tbody>
                 {holdings.map((h) => (
@@ -138,14 +138,14 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
                   </tr>
                 ))}
               </tbody>
-            </table>
+            </table></div>
           )}
         </section>
 
         <section className="py-4">
           <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Activity</h2>
           {entries.length === 0 ? <p className="text-ink-soft">No activity this month.</p> : (
-            <table className="w-full">
+            <div className="-mx-1 overflow-x-auto px-1"><table className="w-full min-w-[34rem] sm:min-w-0">
               <thead><tr><th className={th}>Date</th><th className={th}>Type</th><th className={th}>Description</th><th className={`${th} text-right`}>Amount</th><th className={`${th} pl-4 text-right`}>Cash balance</th></tr></thead>
               <tbody>
                 {entries.map((e) => {
@@ -161,7 +161,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
                   );
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
         </section>
 

@@ -33,7 +33,7 @@ export default async function Home() {
   const interior = f?.photos[2] ?? f?.photos[1] ?? null;
   const emptyMonth = year?.rows.find((r) => r.netIncomeCents <= 0n) ?? null;
   const windowLine = d.openWindow
-    ? `A trading window is open now and closes ${fmtDay(d.openWindow.closesAt)}.`
+    ? `A trading window is open now and is open through ${fmtDay(new Date(d.openWindow.closesAt.getTime() - 1))}.`
     : d.nextWindow
       ? `The next window opens ${fmtDay(d.nextWindow.opensAt)}.`
       : null;

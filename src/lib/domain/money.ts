@@ -156,12 +156,12 @@ export function formatCentsWhole(cents: bigint): string {
 }
 
 /** 2_500_000n → "2.5"; trims trailing zeros, keeps up to `maxDecimals` (truncating). */
-export function formatUnits(units: bigint, maxDecimals = 4): string {
+export function formatUnits(units: bigint, maxDecimals = 4, minDecimals = 0): string {
   const neg = units < 0n;
   const abs = neg ? -units : units;
   const whole = group((abs / UNITS_PER_SHARE).toString());
   let frac = (abs % UNITS_PER_SHARE).toString().padStart(6, "0").slice(0, maxDecimals);
-  frac = frac.replace(/0+$/, "");
+  frac = frac.replace(/0+$/, "").padEnd(Math.min(minDecimals, maxDecimals), "0");
   return `${neg ? "−" : ""}${whole}${frac ? `.${frac}` : ""}`;
 }
 

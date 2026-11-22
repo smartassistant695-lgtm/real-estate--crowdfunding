@@ -30,6 +30,7 @@ export function VoteForm({ action, proposalId, current }: { action: FormAction; 
       <Submit size="lg" className="mt-4 w-full" disabled={!choice || choice === current} pendingLabel="Recording…">
         {current ? "Change vote" : "Cast vote"}
       </Submit>
+      {!choice ? <p className="mt-2 text-xs text-stone">Choose For, Against or Abstain.</p> : choice === current ? <p className="mt-2 text-xs text-stone">This is your current vote. Choose another option to change it.</p> : null}
     </ActionForm>
   );
 }

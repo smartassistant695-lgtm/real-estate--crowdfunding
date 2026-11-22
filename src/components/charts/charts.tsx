@@ -7,7 +7,20 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
  * money math. Styling: one accent series, hairline horizontal grid, direct labels, no legend box.
  */
 
-const axis = { fontSize: 12, fill: "var(--color-stone)", fontFamily: "var(--font-sans)" } as const;
+const axis = { fontSize: 12, fill: "var(--color-stone)", fontFamily: "var(--font-sans)", fontVariantNumeric: "tabular-nums" } as const;
+
+/** Round axis steps (1, 2, 2.5, 5 × 10^n) so ticks read like a person chose them. */
+function niceTicks(min: number, max: number, count = 5): number[] {
+  const span = max - min || Math.abs(max) || 1;
+  const raw = span / count;
+  const mag = 10 ** Math.floor(Math.log10(raw));
+  const step = ([1, 2, 2.5, 5, 10].find((m) => m * mag >= raw) ?? 10) * mag;
+  const lo = Math.floor(min / step) * step;
+  const hi = Math.ceil(max / step) * step;
+  const out: number[] = [];
+  for (let v = lo; v <= hi + step / 2; v += step) out.push(Number(v.toFixed(6)));
+  return out;
+}
 const usd = (v: number, digits = 0) => `$${v.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 const day = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
 const fullDay = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
@@ -46,15 +59,14 @@ export function TimeSeriesChart({
   dotsB?: boolean;
 }) {
   const values = data.flatMap((d) => [d.a, d.b]).filter((v): v is number => typeof v === "number");
-  const min = Math.min(...values), max = Math.max(...values);
-  const pad = (max - min || max * 0.02 || 1) * 0.15;
+  const ticks = niceTicks(Math.min(...values), Math.max(...values), 4);
   return (
     <div style={{ height }} aria-hidden>
       <ResponsiveContainer width="100%" height="100%">
         <LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
           <CartesianGrid vertical={false} stroke="var(--color-rule)" strokeWidth={1} />
           <XAxis dataKey="t" type="number" scale="time" domain={["dataMin", "dataMax"]} tickFormatter={day} tick={axis} tickLine={false} axisLine={{ stroke: "var(--color-ink)" }} minTickGap={48} />
-          <YAxis domain={[Math.max(0, min - pad), max + pad]} tickFormatter={(v: number) => usd(v, digits)} tick={axis} tickLine={false} axisLine={false} width={digits ? 52 : 64} tickCount={5} />
+          <YAxis domain={[ticks[0] ?? 0, ticks[ticks.length - 1] ?? 1]} ticks={ticks} tickFormatter={(v: number) => usd(v, digits)} tick={axis} tickLine={false} axisLine={false} width={digits ? 52 : 64} />
           <Tooltip content={<Tip digits={digits} names={{ a: names.a, b: names.b ?? "" }} />} cursor={{ stroke: "var(--color-stone)", strokeWidth: 1 }} />
           <Line dataKey="a" type={stepA ? "stepAfter" : "monotone"} stroke="var(--color-accent)" strokeWidth={2} dot={false} connectNulls isAnimationActive={false} />
           {names.b ? (
@@ -73,7 +85,7 @@ export function MonthlyBars({ data, name, digits = 2, height = 200 }: { data: { 
         <BarChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }} barCategoryGap="28%">
           <CartesianGrid vertical={false} stroke="var(--color-rule)" />
           <XAxis dataKey="label" tick={axis} tickLine={false} axisLine={{ stroke: "var(--color-ink)" }} interval="preserveStartEnd" />
-          <YAxis tickFormatter={(v: number) => usd(v, digits)} tick={axis} tickLine={false} axisLine={false} width={56} tickCount={4} />
+          <YAxis domain={[0, "auto"]} tickFormatter={(v: number) => usd(v, digits)} tick={axis} tickLine={false} axisLine={false} width={56} tickCount={4} allowDecimals />
           <Tooltip content={<Tip digits={digits > 2 ? digits : 2} names={{ v: name }} />} cursor={{ fill: "var(--color-paper-deep)" }} />
           <Bar dataKey="v" fill="var(--color-accent)" isAnimationActive={false} />
         </BarChart>

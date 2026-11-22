@@ -7,9 +7,9 @@ type Size = "sm" | "md" | "lg";
 
 const base =
   "inline-flex items-center justify-center gap-2 rounded-sm font-medium whitespace-nowrap select-none " +
-  "transition-colors duration-150 disabled:opacity-50 disabled:pointer-events-none aria-disabled:opacity-50 aria-disabled:pointer-events-none";
+  "transition-colors duration-150 disabled:pointer-events-none aria-disabled:pointer-events-none disabled:opacity-60 aria-disabled:opacity-60";
 const variants: Record<Variant, string> = {
-  primary: "bg-accent text-on-accent hover:bg-accent-deep",
+  primary: "bg-accent text-on-accent hover:bg-accent-deep disabled:bg-paper-deep disabled:text-stone aria-disabled:bg-paper-deep aria-disabled:text-stone",
   secondary: "border border-ink text-ink hover:bg-ink hover:text-paper",
   quiet: "text-ink underline decoration-edge underline-offset-4 hover:decoration-ink px-0!",
   danger: "border border-loss text-loss hover:bg-loss hover:text-paper",
