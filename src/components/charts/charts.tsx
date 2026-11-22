@@ -7,7 +7,7 @@ import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Too
  * money math. Styling: one accent series, hairline horizontal grid, direct labels, no legend box.
  */
 
-const axis = { fontSize: 11, fill: "var(--color-stone)", fontFamily: "var(--font-sans)" } as const;
+const axis = { fontSize: 12, fill: "var(--color-stone)", fontFamily: "var(--font-sans)" } as const;
 const usd = (v: number, digits = 0) => `$${v.toLocaleString("en-US", { minimumFractionDigits: digits, maximumFractionDigits: digits })}`;
 const day = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", year: "2-digit", timeZone: "UTC" });
 const fullDay = (t: number) => new Date(t).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });

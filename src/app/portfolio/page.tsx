@@ -47,7 +47,7 @@ export default async function PortfolioPage({ searchParams }: { searchParams: Pr
       <header className="grid gap-8 border-b border-ink pb-8 pt-10 md:grid-cols-[1.2fr_2fr] md:items-end md:pt-14">
         <div>
           <p className="label">Total account value</p>
-          <p className="num mt-2 font-serif text-4xl tracking-tight md:text-5xl">
+          <p className="num mt-2 font-serif text-3xl tracking-figure sm:text-4xl">
             <CountUpDollars cents={pf.totalCents.toString()} />
           </p>
           <p className="mt-2 text-sm text-ink-soft">Shares at appraised value, plus cash. {user.name ? `Account of ${user.name}.` : ""}</p>

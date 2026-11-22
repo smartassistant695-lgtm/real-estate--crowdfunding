@@ -10,7 +10,7 @@ export function Wordmark({ className, size = "md", href = "/" }: { className?: s
   const mark = (
     <span className={cn("inline-flex flex-col leading-none", className)}>
       <span aria-hidden className={cn("mb-1 block bg-current", size === "lg" ? "h-[3px]" : "h-[2px]")} />
-      <span className={cn("font-serif tracking-[-0.02em]", size === "lg" ? "text-2xl" : "text-lg")} style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0' }}>
+      <span className={cn("font-serif tracking-figure", size === "lg" ? "text-2xl" : "text-lg")} style={{ fontVariationSettings: '"opsz" 144, "SOFT" 0' }}>
         {BRAND.name}
       </span>
     </span>

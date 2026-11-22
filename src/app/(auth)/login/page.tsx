@@ -13,7 +13,6 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
   const { reset } = await searchParams;
   return (
     <>
-      <p className="label mb-3">Welcome back</p>
       <h1 className="text-2xl">Log in</h1>
       {reset ? <Note className="mt-6" tone="neutral">Your password was changed. Log in with the new one.</Note> : null}
       <ActionForm action={logInAction} className="mt-8 space-y-5">

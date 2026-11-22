@@ -1,3 +1,4 @@
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import type { ComponentProps, ReactNode } from "react";
 import { cn } from "@/lib/cn";
@@ -22,7 +23,7 @@ export function Stat({
   return (
     <div className={cn("min-w-0", className)}>
       <dt className="label">{label}</dt>
-      <dd className={cn("num mt-1 font-serif tracking-tight", sizes[size], tone === "gain" && "text-gain", tone === "loss" && "text-loss")}>
+      <dd className={cn("num mt-1 font-serif tracking-figure", sizes[size], tone === "gain" && "text-gain", tone === "loss" && "text-loss")}>
         {value}
       </dd>
       {note ? <dd className="mt-1 text-xs text-stone">{note}</dd> : null}
@@ -43,7 +44,7 @@ export function Badge({ children, tone = "neutral", className }: { children: Rea
   return (
     <span
       className={cn(
-        "inline-flex h-5 items-center rounded-xs border px-2 text-xs font-medium uppercase tracking-[0.08em] whitespace-nowrap",
+        "inline-flex h-5 items-center rounded-xs border px-2 text-xs font-medium uppercase tracking-caps whitespace-nowrap",
         badgeTones[tone],
         className,
       )}
@@ -118,14 +119,20 @@ export function Tabs({
 
 /* ---------- Layout helpers ---------- */
 export function Page({ children, className, narrow }: { children: ReactNode; className?: string; narrow?: boolean }) {
-  return <div className={cn("mx-auto w-full px-4 md:px-8", narrow ? "max-w-3xl" : "max-w-page", className)}>{children}</div>;
+  return <div className={cn("mx-auto w-full px-4 md:px-8", narrow ? "max-w-narrow" : "max-w-page", className)}>{children}</div>;
 }
 
-export function PageHeader({ eyebrow, title, lede, actions }: { eyebrow?: ReactNode; title: ReactNode; lede?: ReactNode; actions?: ReactNode }) {
+/** A heading carries its own weight: no kicker above it. `back` is navigation, not decoration. */
+export function PageHeader({ back, title, lede, actions }: { back?: { href: string; label: string }; title: ReactNode; lede?: ReactNode; actions?: ReactNode }) {
   return (
     <header className="flex flex-col gap-4 border-b border-ink pb-6 pt-10 md:flex-row md:items-end md:justify-between md:pt-14">
-      <div className="max-w-2xl">
-        {eyebrow ? <p className="label mb-3">{eyebrow}</p> : null}
+      <div className="max-w-prose">
+        {back ? (
+          <Link href={back.href} className="mb-4 inline-flex items-center gap-1 text-sm text-stone hover:text-ink">
+            <ArrowLeft aria-hidden className="size-4" strokeWidth={1.5} />
+            {back.label}
+          </Link>
+        ) : null}
         <h1 className="text-2xl md:text-3xl">{title}</h1>
         {lede ? <p className="mt-3 text-md text-ink-soft">{lede}</p> : null}
       </div>
@@ -149,20 +156,95 @@ export function SectionHeading({ children, aside, id }: { children: ReactNode; a
 export function Empty({ title, children, action }: { title: string; children?: ReactNode; action?: ReactNode }) {
   return (
     <div className="border-y border-rule py-10">
-      <p className="font-serif text-lg">{title}</p>
+      <p className="font-serif text-md">{title}</p>
       {children ? <p className="mt-2 max-w-prose text-sm text-ink-soft">{children}</p> : null}
       {action ? <div className="mt-5">{action}</div> : null}
     </div>
   );
 }
 
-/** A note set off by a left rule: plain-language explanations and warnings. */
+/**
+ * Plain-language explanations and warnings. Neutral: a 2px ink rule on the left, no fill.
+ * Caution / problem: ruled top and bottom in the tone colour over its wash, led by a tone word,
+ * so the meaning never rests on colour alone.
+ */
 export function Note({ children, tone = "neutral", title, className }: { children: ReactNode; tone?: "neutral" | "notice" | "loss"; title?: string; className?: string }) {
-  const tones = { neutral: "border-ink", notice: "border-notice bg-notice-wash", loss: "border-loss bg-loss-wash" } as const;
+  if (tone === "neutral") {
+    return (
+      <div className={cn("border-l-2 border-ink py-2 pl-4 pr-3 text-sm text-ink-soft", className)}>
+        {title ? <p className="mb-1 font-medium text-ink">{title}</p> : null}
+        {children}
+      </div>
+    );
+  }
+  const t = tone === "notice" ? { box: "border-notice bg-notice-wash", word: "Caution", text: "text-notice" } : { box: "border-loss bg-loss-wash", word: "Problem", text: "text-loss" };
   return (
-    <div className={cn("border-l-2 py-2 pl-4 pr-3 text-sm text-ink-soft", tones[tone], className)}>
-      {title ? <p className="mb-1 font-medium text-ink">{title}</p> : null}
+    <div className={cn("border-y px-4 py-3 text-sm text-ink-soft", t.box, className)}>
+      <p className="mb-1">
+        <span className={cn("label mr-2", t.text)}>{t.word}</span>
+        {title ? <span className="font-medium text-ink">{title}</span> : null}
+      </p>
       {children}
+    </div>
+  );
+}
+
+/** "Step 2 of 5" over a ruled row; the current step has a 2px ink top rule. */
+export function Stepper({ steps, current, label = "Progress" }: { steps: string[]; current: number; label?: string }) {
+  return (
+    <div className="mb-10">
+      <p className="label mb-2">Step <span className="num">{current + 1}</span> of <span className="num">{steps.length}</span></p>
+      <ol aria-label={label} className="grid gap-2" style={{ gridTemplateColumns: `repeat(${steps.length}, minmax(0, 1fr))` }}>
+        {steps.map((s, i) => (
+          <li key={s} aria-current={i === current ? "step" : undefined} className={cn("border-t-2 pt-2 text-xs", i <= current ? "border-ink" : "border-rule", i === current ? "text-ink" : "text-stone")}>
+            <span className="hidden sm:inline">{s}</span>
+            {i < current ? <span className="sr-only"> (done)</span> : null}
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/**
+ * A measured quantity on a track: funding progress, quorum, a tally. 8px track in paper-deep,
+ * accent fill. Optional threshold ticks (2px ink) with their own text label. The figure is always
+ * printed as text next to it; the bar is never the only carrier of the number.
+ */
+export function Meter({
+  segments,
+  max,
+  thresholds = [],
+  label,
+  className,
+}: {
+  segments: { value: number; tone: "accent" | "ink" | "stone"; label: string }[];
+  max: number;
+  thresholds?: { at: number; label: string }[];
+  label: string;
+  className?: string;
+}) {
+  const pct = (v: number) => `${Math.max(0, Math.min(100, (v / (max || 1)) * 100))}%`;
+  const fill = { accent: "bg-accent", ink: "bg-ink", stone: "bg-stone" } as const;
+  return (
+    <div className={className}>
+      <div role="img" aria-label={label} className="relative h-2 bg-paper-deep">
+        <div className="absolute inset-0 flex gap-px">
+          {segments.filter((s) => s.value > 0).map((s) => (
+            <div key={s.label} className={fill[s.tone]} style={{ width: pct(s.value) }} />
+          ))}
+        </div>
+        {thresholds.map((t) => (
+          <div key={t.label} aria-hidden className="absolute -inset-y-1 w-0.5 bg-ink" style={{ left: pct(t.at) }} />
+        ))}
+      </div>
+      {thresholds.length ? (
+        <div className="relative mt-1 h-4 text-xs text-stone">
+          {thresholds.map((t) => (
+            <span key={t.label} className="absolute -translate-x-1/2 whitespace-nowrap" style={{ left: pct(t.at) }}>{t.label}</span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }

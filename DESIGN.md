@@ -33,7 +33,7 @@ these exist.
 | `paper-deep` | `#ECE7DE` | Sunk areas, active row, table header fill | — |
 | `card` | `#FBFAF7` | Input fills, raised surfaces | — |
 | `white` | `#FFFFFF` | The printed statement sheet only | — |
-| `ink` | `#1C1B19` | Text, heavy rules, dark buttons | 16.3:1 on paper |
+| `ink` | `#1C1B19` | Text, heavy rules, dark buttons | 15.5:1 on paper |
 | `ink-soft` | `#45423D` | Secondary text | 9.0:1 on paper |
 | `stone` | `#6A655C` | Labels, captions, tertiary text | 5.2:1 paper · 4.7:1 paper-deep · 5.5:1 card |
 | `rule` | `#D8D2C6` | Hairline dividers (decorative only) | not for controls |
@@ -53,6 +53,7 @@ Rules:
 - `gain`/`loss` colour only a **change in value**. Money simply moving (a deposit, a purchase) is
   ink. Every coloured figure also carries a `+` or `−`, so colour is never the only signal.
 - One accent. A second brand colour is not allowed.
+- Links: underline in `edge` (3.5:1), `ink` on hover. Never a bare colour change.
 
 ---
 
@@ -78,23 +79,31 @@ Rules:
 - Adjacent steps differ by at least 2px below 16px and by at least 1.2× from 16px up, so every
   level reads as a different level. No sizes outside this table (no `text-[13px]`).
 - Line heights sit on the 4px grid.
-- `.label`: 12px, weight 500, uppercase, letter-spacing 0.09em, `stone`.
-- Headings: serif, weight 400, letter-spacing −0.015em, `text-wrap: balance`.
-- Weights: 400 and 500 (600 only for totals in tables). No bold display type.
+- `.label`: 12px, weight 500, uppercase, `tracking-caps` (0.09em), `stone`. **For data labels only**
+  (Stat, table heads, Facts, field labels, nav group titles) — **never as a kicker above a heading.**
+  A heading carries its own weight. Navigation above a title is a breadcrumb or a back link in
+  `text-sm stone`, not a `.label`.
+- Heading levels: `text-lg` = h2 and dialog titles only. Card titles, Empty titles and list titles =
+  `text-md` serif. Page titles `text-2xl md:text-3xl`. Display sizes cap at `text-3xl` below `sm`.
+- Headings: serif, weight 400, `tracking-figure` (−0.015em), `text-wrap: balance`. Serif figures also
+  use `tracking-figure`. Every uppercase string uses `tracking-caps`; no other tracking values.
+- Weights: 400 and 500. 600 only for table totals and printed-statement section heads.
+- Line height: the token's own, `leading-none`, or numeric `leading-N` (N×4px). No named leadings
+  (`leading-relaxed`, `leading-snug`) and no `em`-based spacing.
 
 ---
 
 ## 4. Spacing
 
-**4px base.** Use Tailwind steps that are multiples of 4px: `1` (4), `2` (8), `3` (12), `4` (16),
-`5` (20), `6` (24), `8` (32), `10` (40), `12` (48), `14` (56), `16` (64), `24` (96).
-No `0.5`, `1.5`, `2.5`, `3.5` and no arbitrary pixel values for spacing.
+**4px base.** Any integer Tailwind step (n × 4px). No fractional steps (`0.5`, `1.5`, `2.5`, `3.5`).
+Arbitrary values only for grid templates, aspect ratios, stroke weights, and `rem` sizes that are
+multiples of 0.25rem.
 
 | Context | Value |
 |---|---|
 | Page gutter | 16 mobile · 32 desktop |
-| Max content width | `max-w-page` 1248px; prose `max-w-prose` 640px |
-| Table row | 8px vertical, 16px between columns |
+| Widths (tokens; stock `max-w-sm/md/3xl` do not exist) | `max-w-form` 384px (every single-column form) · `max-w-auth` 448px · `max-w-prose` 640px · `max-w-narrow` 768px · `max-w-page` 1248px |
+| Table row | 8px vertical, 16px between columns; admin dense tables 4px vertical |
 | Form field gap | 20px (`space-y-5`) |
 | Section gap | 56px (`pt-14`) |
 | Header bottom rule → content | 32–40px |
@@ -136,13 +145,34 @@ All in `src/components/ui` and `src/components/site`. Shown together at `/design
 | Facts | Key–value rows for fact sheets and order reviews |
 | Badge | Small-caps text in a 1px outline; `solid` only for "open now" states |
 | Tabs | Links with URLs; 2px ink underline on the active tab |
-| Note | Left rule, plain text; neutral / notice / loss |
+| Note | Neutral: 2px ink rule on the left, no fill. Caution / problem: 1px top and bottom rule in the tone colour over its wash, led by the tone word (`Caution`, `Problem`) as a `.label`. **Never a coloured left bar on a filled box.** Form results use the same pattern (`Problem`, `Done`) |
+| Stepper | "Step 2 of 5" `.label` over a ruled row; done and current steps have a 2px ink top rule |
+| Meter | 8px `paper-deep` track, `accent` fill. Threshold ticks are 2px ink with a text label under them ("Quorum 30%"). Tally segments: For = `accent`, Against = `ink`, Abstain = `stone`, separated by a 1px gap. Never gain/loss colours. The figure is always printed as text too. Used for funding, quorum and vote tallies |
+| SegmentedToggle | Buy/Sell, grid/list, dollars/shares: 40px tall, ink border, selected = ink fill with paper text, `aria-pressed` or links with `aria-current`. Buy/Sell are never green/red |
+| Pagination | Links (`?page=`): "Newer · Page 2 of 8 · Older", `.num`, works without JavaScript |
+| FilterBar | A GET form above its table; one row of controls; an Apply button so it works without JavaScript |
+| Admin form | From `md`: label column `grid-cols-[12rem_1fr]`; fieldsets under a SectionHeading; actions left-aligned, primary first, then a quiet Cancel |
+| Dense table (admin) | 4px vertical padding, row hover `paper-deep`, row actions as quiet `sm` buttons on the right |
+| Confirm dialog | Every irreversible or money-moving admin action (pay, cancel, close vote, record sale, delete) opens a Dialog whose title states the action and the figure ("Pay $4,213.50 to 21 investors?"), a primary or danger button with a verb, and a secondary "Keep draft"/"Cancel" |
+| Notification row | 8px accent dot with sr-only "Unread", title in weight 500, body in `ink-soft`, grouped under date labels |
 | Empty | One sentence, one next step, no illustration |
 | Dialog | Native `<dialog>` |
 | Toast | Ink bar, bottom-left, `aria-live="polite"` |
 | ChartFrame + charts | Title, one-line reading, direct key, table alternative |
 | PropertyCard | Photo, city label, serif name, three figures on a ruled row |
 | Wordmark | Typeset brand name under a single beam. No icon |
+
+### 6a. States
+
+| State | Rule |
+|---|---|
+| Hover | Colour shift only (buttons fill/invert; links darken their underline); no lift, no shadow |
+| Focus | 2px `accent` outline, 2px offset. On `ink` surfaces (toast, solid buttons) the outline is `paper` |
+| Disabled | `opacity-50` **and** a sentence next to it saying why ("Trading opens December 1") |
+| Error | Inline under the field (`loss`, `role="alert"`), plus a `Problem` note for the form. Never only a toast |
+| Loading | Pending label on the button ("Placing order…"); text in `stone` ("Loading orders…") or a static `paper-deep` block. No spinners, no shimmer |
+| Empty | The `Empty` component: one serif sentence, one line of context, at most one action |
+| Success | A short toast ("Order placed.") and the changed data visible on the page |
 
 ---
 
@@ -161,15 +191,25 @@ All in `src/components/ui` and `src/components/site`. Shown together at `/design
 - Only purposeful motion: the account-value count-up (700ms, ease-out cubic), a 6px rise on
   toasts (500ms), colour transitions on hover (150ms), and a 2% image zoom on card hover (500ms).
 - Ease-out for things entering; nothing over 700ms; no linear fades.
+- No motion on keyboard-driven or high-frequency actions (typing, tab switches, table sorting).
 - Everything is disabled under `prefers-reduced-motion`.
 
 ---
 
 ## 9. Accessibility
 
-WCAG 2.2 AA. Visible 2px accent focus outline. A skip link. Every control has a visible label.
+WCAG 2.2 AA. Visible 2px focus outline (accent; paper on ink). A skip link. Every control has a visible label.
 Tabs, filters and pagination are links, so they work without JavaScript. Errors are announced
 (`role="alert"`) and tied to their field (`aria-describedby`).
+
+### Small screens (below `md`, designed at 375px)
+
+- Tap targets at least 44px tall (`h-11`) for nav links and menu items; buttons stay 40–48px.
+- Navigation collapses into a "Menu" disclosure; the primary action stays visible.
+- Form submit buttons are `w-full sm:w-auto`.
+- Display sizes cap at `text-3xl`; long figures must not overflow 343px.
+- Wide tables scroll horizontally inside the page gutter (`-mx-4`); Stat grids go 2-up.
+- Native checkboxes and radios, coloured with `accent-color` (no custom-drawn controls).
 
 ---
 
@@ -178,3 +218,11 @@ Tabs, filters and pagination are links, so they work without JavaScript. Errors 
 Plain, specific, calm. Short sentences. Real numbers. Explain jargon inline ("appraised value is
 an independent estimate…"). Risks in the same tone as benefits. Empty states are written with
 care: what is missing, and the one thing to do next.
+
+---
+
+## 11. Print
+
+Statements and any page a user prints: white ground, ink text, no shadows, no navigation (`.no-print`),
+accent only as a chart line, table rows and fact rows never split across pages, and every printed
+page carries the demo notice.

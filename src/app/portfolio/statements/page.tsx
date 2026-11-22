@@ -17,7 +17,7 @@ export default async function StatementsPage() {
   const complete = rows.filter((r) => r.month < current);
   return (
     <Page narrow className="pb-8">
-      <PageHeader eyebrow={<Link href="/portfolio" className="hover:text-ink">Portfolio</Link>} title="Monthly statements" lede="One statement for each month your account had activity. A statement is produced once the month has ended." />
+      <PageHeader back={{ href: "/portfolio", label: "Portfolio" }} title="Monthly statements" lede="One statement for each month your account had activity. A statement is produced once the month has ended." />
       {complete.length === 0 ? (
         <Empty title="Your first statement arrives next month.">Statements cover a full calendar month and are generated from the ledger after it ends.</Empty>
       ) : (

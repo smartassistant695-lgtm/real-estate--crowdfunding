@@ -3,7 +3,7 @@ import { BRAND } from "@/config/brand";
 /** The plain-English risk disclosure. Shown in onboarding and on /legal/risks. One source. */
 export function RiskDisclosureText() {
   return (
-    <div className="prose-plain max-w-prose text-sm leading-relaxed text-ink-soft">
+    <div className="prose-plain max-w-prose text-sm leading-6 text-ink-soft">
       <p className="text-base text-ink">
         Buying a share of a rental home is an investment, and investments can lose money. Please read this before you put any in.
       </p>
@@ -45,7 +45,7 @@ export function RiskDisclosureText() {
 
 export function TradingDisclosureText() {
   return (
-    <div className="prose-plain max-w-prose text-sm leading-relaxed text-ink-soft">
+    <div className="prose-plain max-w-prose text-sm leading-6 text-ink-soft">
       <p className="text-base text-ink">Before your first trade, here is how selling and buying between investors works.</p>
       <ul>
         <li><strong>Windows.</strong> Orders can be placed only during a trading window: the first seven days of each month.</li>

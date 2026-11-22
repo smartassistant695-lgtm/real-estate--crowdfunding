@@ -66,7 +66,7 @@ const PRESETS = ["26", "100", "500"];
 export function FundForm({ action, cta = "Add funds" }: { action: FormAction; cta?: string }) {
   const [amount, setAmount] = useState("100");
   return (
-    <ActionForm action={action} idempotent className="max-w-sm">
+    <ActionForm action={action} idempotent className="max-w-form">
       <fieldset>
         <legend className="label mb-2">Amount</legend>
         <div className="mb-3 flex gap-2">

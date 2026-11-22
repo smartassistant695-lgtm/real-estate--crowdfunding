@@ -56,7 +56,7 @@ export function PropertyCard({ p, layout = "grid", priority }: { p: PropertyCard
             <p className="label">{p.city}, {p.state}</p>
             <Badge tone={status.tone}>{status.label}</Badge>
           </div>
-          <h3 className="mt-2 text-lg leading-snug">
+          <h3 className="mt-2 text-md">
             <Link href={`/properties/${p.slug}`} className="underline-offset-4 hover:underline">{p.name}</Link>
           </h3>
           <p className="mt-1 text-sm text-ink-soft">

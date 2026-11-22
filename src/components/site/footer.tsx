@@ -8,7 +8,7 @@ export function SiteFooter() {
       <div className="mx-auto grid max-w-page gap-10 px-4 py-12 md:grid-cols-[1.4fr_1fr_1fr_1fr] md:px-8">
         <div>
           <Wordmark href={null} />
-          <p className="mt-4 max-w-xs text-sm text-ink-soft">{BRAND.tagline}</p>
+          <p className="mt-4 max-w-form text-sm text-ink-soft">{BRAND.tagline}</p>
         </div>
         <nav aria-label="Product">
           <p className="label mb-3">Product</p>

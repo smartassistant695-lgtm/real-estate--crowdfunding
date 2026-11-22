@@ -104,7 +104,7 @@ export function ReserveForm({ action, propertyId, priceCents, maxUnits, sellable
   const proceeds = units !== null ? tradeNotional(units, price) : null;
   const tooMany = units !== null && units > cap;
   return (
-    <ActionForm action={action} idempotent className="max-w-sm">
+    <ActionForm action={action} idempotent className="max-w-form">
       <input type="hidden" name="propertyId" value={propertyId} />
       <Input label="Shares to sell to the reserve" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={`Up to ${formatUnits(cap)} shares at ${formatCents(price)} each`} />
       <p className="num mt-3 text-sm" aria-live="polite">

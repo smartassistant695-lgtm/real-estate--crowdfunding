@@ -6,6 +6,7 @@ import { randomUUID } from "node:crypto";
 import type { Prisma, PropertyStatus } from "@prisma/client";
 import { expect } from "vitest";
 import { prisma } from "@/lib/db";
+import type { FinancialsInput } from "@/lib/services/dividends";
 import { postLedger, reconcile } from "@/lib/services/ledger";
 import { buyPrimary } from "@/lib/services/purchase";
 import { deposit, MAX_DEPOSIT_CENTS } from "@/lib/services/wallet";
@@ -184,6 +185,23 @@ export async function seedReserve(propertyId: string, amountCents: bigint, when:
       { account: "EXTERNAL", propertyId, type: "RESERVE_ALLOCATION", amountCents: -amountCents, memo: "Test: reserve funded" },
     ], when);
   });
+}
+
+/** A month's income statement with every line zero unless given. */
+export function financials(f: Partial<FinancialsInput> = {}): FinancialsInput {
+  return {
+    grossRentCents: 0n,
+    vacancyLossCents: 0n,
+    managementFeeCents: 0n,
+    maintenanceCents: 0n,
+    taxesCents: 0n,
+    insuranceCents: 0n,
+    hoaCents: 0n,
+    otherExpensesCents: 0n,
+    occupancyRateBps: 10_000,
+    notes: "",
+    ...f,
+  };
 }
 
 // ---------- readers ----------

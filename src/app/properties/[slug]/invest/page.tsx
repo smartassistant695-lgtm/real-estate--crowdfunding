@@ -29,7 +29,7 @@ export default async function InvestPage({ params }: { params: Promise<{ slug: s
   return (
     <Page className="pb-8">
       <header className="border-b border-ink pb-6 pt-10 md:pt-14">
-        <p className="label mb-3"><Link href={`/properties/${p.slug}`} className="hover:text-ink">{p.name}</Link> <span aria-hidden>/</span> Invest</p>
+        <nav aria-label="Breadcrumb" className="mb-4 text-sm text-stone"><Link href={`/properties/${p.slug}`} className="hover:text-ink">{p.name}</Link> <span aria-hidden>/</span> Invest</nav>
         <h1 className="text-2xl md:text-3xl">Buy shares of {p.name}</h1>
         <p className="mt-2 text-ink-soft">{p.street}, {p.city}, {p.state}</p>
       </header>

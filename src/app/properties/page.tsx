@@ -62,9 +62,8 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
   return (
     <Page className="pb-8">
       <PageHeader
-        eyebrow={`${items.length} ${items.length === 1 ? "property" : "properties"}`}
         title="Properties"
-        lede="Each home is owned by its own company. You buy shares of that company, from $26, and receive your share of the rent each month."
+        lede={`${items.length} ${items.length === 1 ? "home" : "homes"}. Each is owned by its own company. You buy shares of that company, from $26, and receive your share of the rent each month.`}
         actions={!user ? <ButtonLink href="/signup">Open an account to invest</ButtonLink> : undefined}
       />
 

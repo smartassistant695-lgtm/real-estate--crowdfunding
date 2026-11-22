@@ -52,12 +52,14 @@ export function ActionForm({
       <form action={formAction} className={className} noValidate={false} {...rest}>
         {children}
         {state && !state.ok && state.message ? (
-          <p role="alert" className="mt-4 border-l-2 border-loss bg-loss-wash px-3 py-2 text-sm text-loss">
+          <p role="alert" className="mt-4 border-y border-loss bg-loss-wash px-4 py-3 text-sm text-ink">
+            <span className="label mr-2 text-loss!">Problem</span>
             {state.message}
           </p>
         ) : null}
         {state?.ok && state.message && !toastOnSuccess ? (
-          <p role="status" className="mt-4 border-l-2 border-accent bg-accent-wash px-3 py-2 text-sm text-accent-deep">
+          <p role="status" className="mt-4 border-y border-accent bg-accent-wash px-4 py-3 text-sm text-accent-deep">
+            <span className="label mr-2 text-accent!">Done</span>
             {state.message}
           </p>
         ) : null}
@@ -145,7 +147,7 @@ export function Textarea({ label, hint, error, className, ...rest }: FieldShell 
         id={id}
         aria-invalid={err ? true : undefined}
         aria-describedby={err ? `${id}-error` : hint ? `${id}-hint` : undefined}
-        className={cn(control, "h-auto min-h-24 py-2 leading-relaxed")}
+        className={cn(control, "h-auto min-h-24 py-2 leading-5")}
         {...rest}
       />
     </Shell>
@@ -181,7 +183,7 @@ export function Checkbox({ label, className, ...rest }: { label: ReactNode; clas
   const id = rest.id ?? auto;
   return (
     <div className={cn("flex items-start gap-3", className)}>
-      <input id={id} type="checkbox" className="mt-1 size-4 shrink-0 rounded-xs border border-edge accent-accent" {...rest} />
+      <input id={id} type="checkbox" className="mt-1 size-4 shrink-0 accent-accent" {...rest} />
       <label htmlFor={id} className="text-sm text-ink">
         {label}
       </label>

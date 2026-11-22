@@ -11,7 +11,7 @@ import { Wordmark } from "./wordmark";
 export function DemoBanner() {
   return (
     <div className="no-print bg-ink text-paper">
-      <p className="mx-auto max-w-page px-4 py-2 text-center text-xs font-medium uppercase tracking-[0.12em] md:px-8">
+      <p className="mx-auto max-w-page px-4 py-2 text-center text-xs font-medium uppercase tracking-caps md:px-8">
         {BRAND.demoBanner}
       </p>
     </div>
@@ -50,7 +50,7 @@ export async function SiteHeader() {
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-10 focus:z-50 focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:text-paper">
         Skip to content
       </a>
-      <div className="mx-auto flex h-16 max-w-page items-center gap-6 px-4 md:px-8">
+      <div className="mx-auto flex h-16 max-w-page items-center gap-4 px-4 md:gap-6 md:px-8">
         <Wordmark />
         <nav aria-label="Main" className="ml-4 hidden items-center gap-6 md:flex">
           {nav.map((n) => (
@@ -59,7 +59,7 @@ export async function SiteHeader() {
             </Link>
           ))}
         </nav>
-        <div className="ml-auto flex items-center gap-4">
+        <div className="ml-auto flex items-center gap-3 md:gap-4">
           {user ? (
             <>
               {!isAdmin && user.wallet ? (
@@ -84,7 +84,7 @@ export async function SiteHeader() {
                   <ul className="py-1 text-sm">
                     {nav.map((n) => (
                       <li key={n.href} className="md:hidden">
-                        <Link href={n.href} className="block px-4 py-2 hover:bg-paper-deep">{n.label}</Link>
+                        <Link href={n.href} className="flex h-11 items-center px-4 hover:bg-paper-deep">{n.label}</Link>
                       </li>
                     ))}
                     {!isAdmin && onboarded ? (
@@ -104,9 +104,17 @@ export async function SiteHeader() {
             </>
           ) : (
             <>
-              <Link href="/how-it-works" className={`${linkCls} md:hidden`}>How it works</Link>
-              <Link href="/login" className={linkCls}>Log in</Link>
-              <ButtonLink href="/signup" size="sm">Open an account</ButtonLink>
+              {/* Below md the nav links move into a menu so the bar fits a 375px screen. */}
+              <details className="group relative md:hidden">
+                <summary className="flex h-11 cursor-pointer list-none items-center text-sm text-ink-soft hover:text-ink [&::-webkit-details-marker]:hidden">Menu</summary>
+                <ul className="absolute right-0 z-40 mt-2 w-48 rounded-md border border-ink bg-paper py-2 text-sm shadow-pop">
+                  {nav.map((n) => (
+                    <li key={n.href}><Link href={n.href} className="flex h-11 items-center px-4 hover:bg-paper-deep">{n.label}</Link></li>
+                  ))}
+                </ul>
+              </details>
+              <Link href="/login" className={`${linkCls} flex h-11 items-center`}>Log in</Link>
+              <ButtonLink href="/signup" size="sm"><span className="sm:hidden">Sign up</span><span className="hidden sm:inline">Open an account</span></ButtonLink>
             </>
           )}
         </div>

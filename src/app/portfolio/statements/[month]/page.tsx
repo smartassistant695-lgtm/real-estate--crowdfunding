@@ -60,7 +60,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
   const holdingsValue = holdings.reduce((a, h) => a + h.value, 0n);
   let running = openingCash;
 
-  const th = "border-b border-ink py-2 text-left text-xs font-medium uppercase tracking-[0.08em] text-stone";
+  const th = "border-b border-ink py-2 text-left text-xs font-medium uppercase tracking-caps text-stone";
   const td = "border-b border-rule py-2 align-top";
 
   return (
@@ -71,7 +71,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
       </div>
 
       {/* The sheet */}
-      <article className="border border-rule bg-white px-6 py-8 text-sm leading-snug text-ink sm:px-12 sm:py-12 print:border-0 print:p-0">
+      <article className="border border-rule bg-white px-6 py-8 text-sm leading-5 text-ink sm:px-12 sm:py-12 print:border-0 print:p-0">
         <header className="flex items-start justify-between border-b-2 border-ink pb-5">
           <div>
             <Wordmark href={null} size="lg" />
@@ -100,7 +100,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
 
         <section className="grid gap-8 py-6 sm:grid-cols-2">
           <div>
-            <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.08em]">Account value</h2>
+            <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Account value</h2>
             <table className="num w-full">
               <tbody>
                 <tr><td className={td}>Cash</td><td className={`${td} text-right`}>{money(closingCash)}</td></tr>
@@ -110,7 +110,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
             </table>
           </div>
           <div>
-            <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.08em]">Cash summary</h2>
+            <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Cash summary</h2>
             <table className="num w-full">
               <tbody>
                 <tr><td className={td}>Opening cash balance</td><td className={`${td} text-right`}>{money(openingCash)}</td></tr>
@@ -124,7 +124,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
         </section>
 
         <section className="py-4">
-          <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.08em]">Holdings at {fmtDate(end)}</h2>
+          <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Holdings at {fmtDate(end)}</h2>
           {holdings.length === 0 ? <p className="text-ink-soft">No shares held at month-end.</p> : (
             <table className="w-full">
               <thead><tr><th className={th}>Security</th><th className={`${th} text-right`}>Shares</th><th className={`${th} text-right`}>Appraised / share</th><th className={`${th} text-right`}>Value</th></tr></thead>
@@ -143,7 +143,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
         </section>
 
         <section className="py-4">
-          <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-[0.08em]">Activity</h2>
+          <h2 className="mb-2 font-sans text-xs font-semibold uppercase tracking-caps">Activity</h2>
           {entries.length === 0 ? <p className="text-ink-soft">No activity this month.</p> : (
             <table className="w-full">
               <thead><tr><th className={th}>Date</th><th className={th}>Type</th><th className={th}>Description</th><th className={`${th} text-right`}>Amount</th><th className={`${th} pl-4 text-right`}>Cash balance</th></tr></thead>
@@ -165,7 +165,7 @@ export default async function StatementPage({ params }: { params: Promise<{ mont
           )}
         </section>
 
-        <footer className="mt-6 border-t border-ink pt-4 text-xs leading-relaxed text-stone">
+        <footer className="mt-6 border-t border-ink pt-4 text-xs leading-5 text-stone">
           <p>
             Share values use the most recent independent appraisal on or before the statement date and are estimates, not prices at which shares can be sold. Amounts in parentheses are money leaving your cash balance. This statement is generated from the account ledger.
           </p>

@@ -63,8 +63,16 @@
   --shadow-*: initial;
   --shadow-pop: 0 1px 0 rgb(28 27 25 / 0.04), 0 12px 32px -12px rgb(28 27 25 / 0.22);
 
-  --container-prose: 40rem;
+  /* Widths are tokens too: no stock max-w-sm/md/3xl. */
+  --container-*: initial;
+  --container-form: 24rem; /* every single-column form */
+  --container-auth: 28rem; /* sign-in, sign-up, reset */
+  --container-prose: 40rem; /* reading measure */
+  --container-narrow: 48rem; /* onboarding, statements list */
   --container-page: 78rem;
+
+  --tracking-caps: 0.09em; /* every uppercase label, badge and banner */
+  --tracking-figure: -0.015em; /* serif figures and the wordmark */
 
   --animate-rise: rise 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   @keyframes rise {
@@ -100,23 +108,23 @@
     font-size: var(--text-xs);
     line-height: var(--text-xs--line-height);
     font-weight: 500;
-    letter-spacing: 0.09em;
+    letter-spacing: var(--tracking-caps);
     text-transform: uppercase;
     color: var(--color-stone);
   }
   /* Every financial figure. */
   .num { font-variant-numeric: tabular-nums lining-nums; font-feature-settings: "tnum", "lnum"; }
-  .link { text-decoration: underline; text-decoration-color: var(--color-rule); }
+  .link { text-decoration: underline; text-decoration-color: var(--color-edge); }
   .link:hover { text-decoration-color: currentColor; }
-  .prose-plain > * + * { margin-top: 1em; }
-  .prose-plain h2 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); margin-top: 2em; }
-  .prose-plain h3 { font-family: var(--font-sans); font-weight: 600; font-size: var(--text-base); letter-spacing: 0; margin-top: 1.5em; }
+  .prose-plain > * + * { margin-top: 1rem; }
+  .prose-plain h2 { font-size: var(--text-lg); line-height: var(--text-lg--line-height); margin-top: 3rem; }
+  .prose-plain h3 { font-family: var(--font-sans); font-weight: 500; font-size: var(--text-base); letter-spacing: 0; margin-top: 1.5rem; }
   .prose-plain ul { list-style: none; }
-  .prose-plain ul > li { position: relative; padding-left: 1.25em; }
-  .prose-plain ul > li + li { margin-top: 0.4em; }
+  .prose-plain ul > li { position: relative; padding-left: 1.25rem; }
+  .prose-plain ul > li + li { margin-top: 0.5rem; }
   .prose-plain ul > li::before { content: "–"; position: absolute; left: 0; color: var(--color-stone); }
-  .prose-plain ol { list-style: decimal; padding-left: 1.25em; }
-  .prose-plain strong { font-weight: 600; }
+  .prose-plain ol { list-style: decimal; padding-left: 1.25rem; }
+  .prose-plain strong { font-weight: 500; color: var(--color-ink); }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -130,6 +138,8 @@
 
 @media print {
   .no-print { display: none !important; }
-  html, body { background: #fff; }
+  html, body { background: #fff; color: #1c1b19; }
+  * { box-shadow: none !important; }
+  tr, dl > div, figure { break-inside: avoid; }
   @page { margin: 18mm 16mm; }
 }

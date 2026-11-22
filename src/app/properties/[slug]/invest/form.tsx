@@ -58,9 +58,9 @@ export function InvestForm(props: Props) {
           ))}
         </div>
         {mode === "dollars" ? (
-          <Input label="Amount to invest" name="amount" inputMode="decimal" prefix="$" value={amount} onChange={(e) => setAmount(e.target.value)} hint={`Minimum ${formatCents(min, { whole: true })}. You have ${formatCents(available)} available.`} className="max-w-xs" />
+          <Input label="Amount to invest" name="amount" inputMode="decimal" prefix="$" value={amount} onChange={(e) => setAmount(e.target.value)} hint={`Minimum ${formatCents(min, { whole: true })}. You have ${formatCents(available)} available.`} className="max-w-form" />
         ) : (
-          <Input label="Shares to buy" name="shares" inputMode="decimal" suffix="shares" value={sharesText} onChange={(e) => setSharesText(e.target.value)} hint={`${formatUnits(remaining)} shares left at ${formatCents(price)} each.`} className="max-w-xs" />
+          <Input label="Shares to buy" name="shares" inputMode="decimal" suffix="shares" value={sharesText} onChange={(e) => setSharesText(e.target.value)} hint={`${formatUnits(remaining)} shares left at ${formatCents(price)} each.`} className="max-w-form" />
         )}
         <p className="num mt-5 font-serif text-xl" aria-live="polite">
           {units !== null && cost !== null && units > 0n ? (
@@ -75,7 +75,7 @@ export function InvestForm(props: Props) {
       </div>
 
       {review && units !== null && cost !== null ? (
-        <div className="max-w-md">
+        <div className="max-w-form">
           <p className="label mb-2">Review your order</p>
           <Facts rows={[
             { label: "Property", value: props.propertyName },

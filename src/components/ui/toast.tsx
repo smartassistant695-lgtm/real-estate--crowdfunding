@@ -43,7 +43,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
         {toasts.map((t) => (
           <div key={t.id} className="flex animate-rise items-start gap-3 rounded-sm border border-ink bg-ink px-4 py-3 text-sm text-paper shadow-pop">
             <span className="flex-1">{t.message}</span>
-            <button type="button" onClick={() => dismiss(t.id)} className="label text-paper! opacity-70 hover:opacity-100" aria-label="Dismiss message">
+            <button type="button" onClick={() => dismiss(t.id)} className="label text-paper! opacity-70 hover:opacity-100 focus-visible:opacity-100 focus-visible:outline-paper" aria-label="Dismiss message">
               Close
             </button>
           </div>

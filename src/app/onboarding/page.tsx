@@ -3,9 +3,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Button, ButtonLink } from "@/components/ui/button";
 import { ActionForm, Input, Select, Submit } from "@/components/ui/form";
-import { Facts, Note, Page } from "@/components/ui/primitives";
+import { Facts, Note, Page, Stepper } from "@/components/ui/primitives";
 import { RiskDisclosureText } from "@/components/site/risk-text";
-import { cn } from "@/lib/cn";
 import { formatCents } from "@/lib/domain/money";
 import { onboardingStep, requireUser } from "@/lib/session";
 import { US_STATES } from "@/lib/us-states";
@@ -32,23 +31,13 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
 
   return (
     <Page narrow className="pb-8 pt-10 md:pt-16">
-      <ol aria-label="Account setup progress" className="mb-10 grid grid-cols-5 gap-2">
-        {STEPS.map((s, i) => (
-          <li key={s.key} aria-current={i === index ? "step" : undefined} className={cn("border-t-2 pt-2", i <= index ? "border-ink" : "border-rule")}>
-            <span className={cn("label", i === index && "text-ink!")}>
-              <span className="num mr-2">{i + 2}</span>
-              <span className="hidden sm:inline">{s.label}</span>
-            </span>
-            {i < index ? <span className="sr-only"> (done)</span> : null}
-          </li>
-        ))}
-      </ol>
+      <Stepper steps={["Account", ...STEPS.map((s) => s.label)]} current={index + 1} label="Account setup progress" />
 
       {step === "profile" ? (
         <section>
           <h1 className="text-2xl">About you</h1>
           <p className="mt-3 max-w-prose text-ink-soft">We need your legal name, where you live, and your date of birth to check your identity. Investing rules also differ by state.</p>
-          <ActionForm action={saveProfileAction} className="mt-8 max-w-md space-y-5">
+          <ActionForm action={saveProfileAction} className="mt-8 max-w-form space-y-5">
             <Input label="Full legal name" name="name" autoComplete="name" defaultValue={user.name} required />
             <Select label="State of residence" name="state" defaultValue={user.state ?? ""} required>
               <option value="" disabled>Choose a state</option>
@@ -70,7 +59,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               <p className="mt-3 max-w-prose text-ink-soft">
                 Financial platforms must confirm who their customers are. In a live product this step would ask for a photo ID and check it against official records. In this demo it is simulated: we use the details below and approve after a short pause.
               </p>
-              <Facts className="mt-6 max-w-md" rows={[
+              <Facts className="mt-6 max-w-form" rows={[
                 { label: "Name", value: user.name },
                 { label: "State", value: US_STATES[user.state ?? ""] ?? "" },
                 { label: "Date of birth", value: user.dateOfBirth?.toLocaleDateString("en-US", { timeZone: "UTC", dateStyle: "long" }) ?? "" },

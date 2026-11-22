@@ -22,7 +22,7 @@ export default async function WalletPage() {
   ]);
   return (
     <Page className="pb-8">
-      <PageHeader eyebrow="Account" title="Wallet" lede="Cash waiting to be invested. Dividends and sale proceeds arrive here." />
+      <PageHeader title="Wallet" lede="Cash waiting to be invested. Dividends and sale proceeds arrive here." />
       <dl className="grid grid-cols-2 gap-8 border-b border-rule py-8 md:grid-cols-4">
         <Stat label="Available" value={formatCents(wallet.availableCents)} size="lg" className="col-span-2" />
         <Stat label="Held for open buy orders" value={formatCents(wallet.heldCents)} note="Released if an order is cancelled or expires" />
@@ -35,7 +35,7 @@ export default async function WalletPage() {
         </section>
         <section>
           <SectionHeading>Withdraw</SectionHeading>
-          <ActionForm action={withdrawAction} idempotent className="max-w-sm">
+          <ActionForm action={withdrawAction} idempotent className="max-w-form">
             <Input label="Amount" name="amount" inputMode="decimal" prefix="$" required hint={`Up to ${formatCents(wallet.availableCents)}`} />
             <p className="mt-3 text-xs text-stone">Simulated transfer to “Demo Checking ••0000”.</p>
             <Submit variant="secondary" size="lg" className="mt-5" pendingLabel="Withdrawing…">Withdraw</Submit>

@@ -65,19 +65,19 @@ export default async function PropertyPage({ params, searchParams }: Params) {
       {/* Masthead */}
       <header className="grid gap-4 pb-6 pt-8 md:grid-cols-[1fr_auto] md:items-end md:pt-12">
         <div>
-          <p className="label mb-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+          <nav aria-label="Breadcrumb" className="mb-4 flex flex-wrap items-center gap-x-2 text-sm text-stone">
             <Link href="/properties" className="hover:text-ink">Properties</Link>
             <span aria-hidden>/</span>
-            <span>No. {String(p.sequence).padStart(3, "0")}</span>
+            <span className="num">No. {String(p.sequence).padStart(3, "0")}</span>
             <span aria-hidden>·</span>
             <span>{PROPERTY_TYPE[p.propertyType]}</span>
-          </p>
+          </nav>
           <h1 className="text-3xl md:text-4xl">{p.name}</h1>
           <p className="mt-2 text-md text-ink-soft">{p.street}, {p.city}, {p.state} {p.zip}</p>
         </div>
         <div className="md:text-right">
           <Badge tone={status.tone}>{status.label}</Badge>
-          <p className="mt-2 max-w-xs text-xs text-stone md:ml-auto">{status.explain}</p>
+          <p className="mt-2 max-w-form text-xs text-stone md:ml-auto">{status.explain}</p>
         </div>
       </header>
 
@@ -212,7 +212,7 @@ async function Overview({ p, settingsBand }: { p: Loaded; settingsBand: number }
   return (
     <div className="space-y-14">
       <section>
-        <p className="max-w-prose font-serif text-lg leading-relaxed">{p.description}</p>
+        <p className="max-w-prose font-serif text-lg leading-9">{p.description}</p>
       </section>
 
       {p.appraisals.length > 1 || trades.length > 0 ? (

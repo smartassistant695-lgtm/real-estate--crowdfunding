@@ -30,7 +30,7 @@ export default async function ActivityPage({ searchParams }: { searchParams: Pro
   const pages = Math.max(1, Math.ceil(total / PAGE));
   return (
     <Page className="pb-8">
-      <PageHeader eyebrow={<Link href="/portfolio" className="hover:text-ink">Portfolio</Link>} title="Activity" lede="Every movement of cash and shares in your account, straight from the ledger. Entries are never edited or deleted." actions={<ButtonLink href="/portfolio/statements" variant="secondary">Monthly statements</ButtonLink>} />
+      <PageHeader back={{ href: "/portfolio", label: "Portfolio" }} title="Activity" lede="Every movement of cash and shares in your account, straight from the ledger. Entries are never edited or deleted." actions={<ButtonLink href="/portfolio/statements" variant="secondary">Monthly statements</ButtonLink>} />
       <Tabs className="mt-6" label="Filter activity" current={show} tabs={Object.entries(FILTERS).map(([key, f]) => ({ key, label: f.label, href: `/portfolio/activity${key === "all" ? "" : `?show=${key}`}` }))} />
       {entries.length === 0 ? <Empty title="Nothing here yet." /> : (
         <Table caption="Account activity" className="mt-4">
