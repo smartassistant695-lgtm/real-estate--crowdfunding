@@ -3,7 +3,9 @@
 import { execSync } from "node:child_process";
 
 const env = { ...process.env };
-env.DIRECT_URL ??= env.DATABASE_URL_UNPOOLED ?? env.DATABASE_URL;
+// Accept the names the Neon integration uses with its default or a custom prefix.
+env.DATABASE_URL ??= env.STORAGE_URL ?? env.POSTGRES_PRISMA_URL ?? env.POSTGRES_URL;
+env.DIRECT_URL ??= env.DATABASE_URL_UNPOOLED ?? env.STORAGE_URL_UNPOOLED ?? env.POSTGRES_URL_NON_POOLING ?? env.DATABASE_URL;
 if (!env.DATABASE_URL) {
   console.error("DATABASE_URL is not set. Add a Neon database to the Vercel project (Storage → Neon) or set it by hand.");
   process.exit(1);

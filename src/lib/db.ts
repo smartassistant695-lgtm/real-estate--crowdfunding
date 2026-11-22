@@ -1,8 +1,9 @@
 import "server-only";
 import { Prisma, PrismaClient } from "@prisma/client";
 
-// Neon's Vercel integration names the direct (non-pooled) URL DATABASE_URL_UNPOOLED.
-process.env.DIRECT_URL ??= process.env.DATABASE_URL_UNPOOLED ?? process.env.DATABASE_URL;
+// Accept the names the Neon integration uses with its default or a custom prefix.
+process.env.DATABASE_URL ??= process.env.STORAGE_URL ?? process.env.POSTGRES_PRISMA_URL ?? process.env.POSTGRES_URL;
+process.env.DIRECT_URL ??= process.env.DATABASE_URL_UNPOOLED ?? process.env.STORAGE_URL_UNPOOLED ?? process.env.POSTGRES_URL_NON_POOLING ?? process.env.DATABASE_URL;
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
