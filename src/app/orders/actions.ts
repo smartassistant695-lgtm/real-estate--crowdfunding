@@ -64,7 +64,7 @@ export async function sellToReserveAction(_prev: ActionState, fd: FormData): Pro
 export async function acceptTradingDisclosureAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
   const user = await requireInvestor();
   return guard(async () => {
-    if (fd.get("accept") !== "on") throw new DomainError("Tick the box to confirm you have read how trading works.");
+    if (fd.get("accept") !== "on") throw new DomainError("Tick the box to confirm you have read how trading works.", "accept");
     if (!user.tradingDisclosureAcceptedAt) {
       const at = new Date();
       await prisma.user.update({ where: { id: user.id }, data: { tradingDisclosureAcceptedAt: at } });

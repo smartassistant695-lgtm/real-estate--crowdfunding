@@ -16,7 +16,7 @@ import { US_STATES } from "@/lib/us-states";
 
 const profileSchema = z.object({
   name: z.string().trim().min(2, "Enter your full legal name.").max(120),
-  state: z.string().refine((s) => Object.hasOwn(US_STATES, s), "Choose your state of residence."),
+  state: z.string({ error: "Choose your state of residence." }).refine((s) => Object.hasOwn(US_STATES, s), "Choose your state of residence."),
   dateOfBirth: z.iso.date("Enter your date of birth.").transform((s, ctx) => {
     const d = new Date(`${s}T00:00:00Z`);
     const now = new Date();
@@ -87,7 +87,7 @@ export async function acceptRiskDisclosureAction(_prev: ActionState, fd: FormDat
   const user = await requireUser();
   return guard(async () => {
     if (user.kycStatus !== "APPROVED") throw new DomainError("Complete the identity check first.");
-    if (fd.get("accept") !== "on") throw new DomainError("Tick the box to confirm you have read and understood the risks.");
+    if (fd.get("accept") !== "on") throw new DomainError("Tick the box to confirm you have read and understood the risks.", "accept");
     if (!user.riskDisclosureAcceptedAt) {
       const at = new Date();
       await prisma.user.update({ where: { id: user.id }, data: { riskDisclosureAcceptedAt: at } });

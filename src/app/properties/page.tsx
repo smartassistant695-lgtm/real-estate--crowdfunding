@@ -43,7 +43,10 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
     sp.minYield && minY === null ? "minimum yield" : null,
     sp.maxYield && maxY === null ? "maximum yield" : null,
     sp.maxPrice && maxPrice === null ? "maximum share price" : null,
+    sp.state && !Object.hasOwn(US_STATES, sp.state) ? "state" : null,
+    sp.status && !VISIBLE.includes(sp.status as PropertyStatus) ? "status" : null,
   ].filter(Boolean) as string[];
+  const list = (xs: string[]) => (xs.length <= 1 ? xs.join("") : `${xs.slice(0, -1).join(", ")} and ${xs[xs.length - 1]}`);
   const swapped = minY !== null && maxY !== null && minY > maxY;
   let items = maxPrice !== null ? all.filter((x) => x.card.pricePerShareCents <= maxPrice) : all;
 
@@ -113,7 +116,7 @@ export default async function PropertiesPage({ searchParams }: { searchParams: P
 
       {ignored.length || swapped ? (
         <Note tone="notice" className="mt-6">
-          {ignored.length ? `We ignored the ${ignored.join(" and ")} because it isn’t a number. Use digits, like 5 or 5.5. ` : ""}
+          {ignored.length ? `We ignored the ${list(ignored)} filter${ignored.length > 1 ? "s" : ""} because ${ignored.length > 1 ? "those values aren’t" : "that value isn’t"} valid. Yields and prices are positive numbers, like 5 or 5.5. ` : ""}
           {swapped ? "The minimum yield is higher than the maximum, so nothing can match." : ""}
         </Note>
       ) : null}

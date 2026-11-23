@@ -174,7 +174,7 @@ export default async function HowItWorks() {
           {photo ? (
             <figure className="mb-8">
               <div className="relative aspect-[4/3] bg-paper-deep">
-                <Image src={photo.url} alt={photo.alt} fill sizes="(min-width: 1024px) 384px, 100vw" className="object-cover" />
+                <Image src={photo.url} alt={photo.alt} fill priority sizes="(min-width: 1024px) 384px, 100vw" className="object-cover" />
               </div>
               <figcaption className="mt-2 text-xs text-stone">Inside {photo.property.name}. Representative photograph.</figcaption>
             </figure>

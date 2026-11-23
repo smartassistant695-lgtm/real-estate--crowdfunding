@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/form";
-import { PageHeader, Table, Td, Th } from "@/components/ui/primitives";
+import { Empty, PageHeader, Table, Td, Th } from "@/components/ui/primitives";
 import { prisma } from "@/lib/db";
 import { fmtDateTime } from "@/lib/labels";
 import { requireAdmin } from "@/lib/session";
 
 export const metadata = { title: "Audit log" };
+const qsFor = (action: string, entity: string, actor: string, p: number) => `/admin/audit?action=${encodeURIComponent(action)}&entity=${encodeURIComponent(entity)}&actor=${encodeURIComponent(actor)}&page=${p}`;
 const PAGE = 50;
 
 export default async function AdminAudit({ searchParams }: { searchParams: Promise<{ action?: string; entity?: string; actor?: string; page?: string }> }) {
@@ -22,7 +24,10 @@ export default async function AdminAudit({ searchParams }: { searchParams: Promi
     ...(entity ? { OR: [{ entityType: { equals: entity, mode: "insensitive" as const } }, { entityId: entity }] } : {}),
     ...(actorIds ? { actorId: { in: actor === "system" ? [] : actorIds } } : {}),
   };
-  const [rows, total] = await Promise.all([prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE, take: PAGE }), prisma.auditLog.count({ where })]);
+  const total = await prisma.auditLog.count({ where });
+  const lastPage = Math.max(1, Math.ceil(total / PAGE));
+  if (page > lastPage) redirect(qsFor(action, entity, actor, lastPage));
+  const rows = await prisma.auditLog.findMany({ where, orderBy: { createdAt: "desc" }, skip: (page - 1) * PAGE, take: PAGE });
   const actors = new Map((await prisma.user.findMany({ where: { id: { in: rows.map((r) => r.actorId).filter((x): x is string => !!x) } }, select: { id: true, email: true } })).map((u) => [u.id, u.email]));
   const qs = (p: number) => `/admin/audit?action=${encodeURIComponent(action)}&entity=${encodeURIComponent(entity)}&actor=${encodeURIComponent(actor)}&page=${p}`;
   return (
@@ -34,7 +39,10 @@ export default async function AdminAudit({ searchParams }: { searchParams: Promi
         <Input label="Actor email" name="actor" defaultValue={actor} />
         <Button type="submit" variant="secondary">Filter</Button>
       </form>
-      <Table caption="Audit entries" className="mt-4 text-xs">
+      {rows.length === 0 ? (
+        <Empty title="No entries match these filters." action={<Link className="link" href="/admin/audit">Clear filters</Link>}>Actions are recorded with their dotted names, like <code>dividend.paid</code> or <code>order.placed</code>.</Empty>
+      ) : null}
+      <Table caption="Audit entries" className={rows.length === 0 ? "hidden" : "mt-4 text-xs"}>
         <thead><tr><Th>When</Th><Th>Actor</Th><Th>Action</Th><Th>Entity</Th><Th>Change</Th></tr></thead>
         <tbody>
           {rows.map((r) => (
@@ -46,14 +54,14 @@ export default async function AdminAudit({ searchParams }: { searchParams: Promi
               <Td className="py-1">
                 <details>
                   <summary className="cursor-pointer text-stone underline decoration-edge underline-offset-4">Details</summary>
-                  <pre className="mt-2 max-w-md overflow-x-auto whitespace-pre-wrap break-all bg-paper-deep p-2 text-xs">{JSON.stringify({ before: r.before, after: r.after }, null, 2)}</pre>
+                  <pre className="mt-2 max-w-prose overflow-x-auto whitespace-pre-wrap break-all bg-paper-deep p-2 text-xs">{JSON.stringify({ before: r.before, after: r.after }, null, 2)}</pre>
                 </details>
               </Td>
             </tr>
           ))}
         </tbody>
       </Table>
-      <nav aria-label="Pages" className="mt-6 flex justify-between text-sm">
+      <nav aria-label="Pages" className={rows.length === 0 ? "hidden" : "mt-6 flex justify-between text-sm"}>
         {page > 1 ? <Link className="link" href={qs(page - 1)}>Newer</Link> : <span />}
         <span className="num text-stone">Page {page} of {Math.max(1, Math.ceil(total / PAGE))}</span>
         {page * PAGE < total ? <Link className="link" href={qs(page + 1)}>Older</Link> : <span />}

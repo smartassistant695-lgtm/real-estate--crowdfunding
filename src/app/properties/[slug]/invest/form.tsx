@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ActionForm, Input, Submit, type FormAction } from "@/components/ui/form";
 import { Facts, Note } from "@/components/ui/primitives";
@@ -49,6 +49,14 @@ export function InvestForm(props: Props) {
   const typed = mode === "dollars" ? amount.trim() !== "" : sharesText.trim() !== "";
   const showProblem = typed && !!problem;
   const shareWord = (u: bigint) => (u === 1_000_000n ? "share" : "shares");
+  // Keyboard users keep their place when the form swaps between entry and review.
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const reviewBtn = useRef<HTMLButtonElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    (review ? reviewHeading.current : reviewBtn.current)?.focus();
+  }, [review]);
 
   return (
     <ActionForm action={props.action} idempotent>
@@ -57,15 +65,15 @@ export function InvestForm(props: Props) {
       <div className={cn(review && "hidden")}>
         <div className="mb-5 inline-flex text-sm" role="group" aria-label="Enter as">
           {(["dollars", "shares"] as const).map((m) => (
-            <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("border border-ink px-4 py-2 first:rounded-l-sm last:-ml-px last:rounded-r-sm", mode === m ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
+            <button key={m} type="button" aria-pressed={mode === m} onClick={() => setMode(m)} className={cn("h-10 border border-ink px-4 first:rounded-l-sm last:-ml-px last:rounded-r-sm", mode === m ? "bg-ink text-paper" : "hover:bg-paper-deep")}>
               {m === "dollars" ? "Dollar amount" : "Number of shares"}
             </button>
           ))}
         </div>
         {mode === "dollars" ? (
-          <Input label="Amount to invest" name="amount" inputMode="decimal" prefix="$" value={amount} onChange={(e) => setAmount(e.target.value)} hint={`Minimum ${formatCents(min, { whole: true })}. You have ${formatCents(available)} available.`} className="max-w-form" />
+          <Input label="Amount to invest" name="amount" inputMode="decimal" prefix="$" value={amount} onChange={(e) => setAmount(e.target.value)} hint={`Minimum ${formatCents(min, { whole: true })}. You have ${formatCents(available)} available.`} error={showProblem ? problem ?? undefined : undefined} className="max-w-form" />
         ) : (
-          <Input label="Shares to buy" name="shares" inputMode="decimal" suffix="shares" value={sharesText} onChange={(e) => setSharesText(e.target.value)} hint={`${formatUnits(remaining)} shares left at ${formatCents(price)} each.`} className="max-w-form" />
+          <Input label="Shares to buy" name="shares" inputMode="decimal" suffix="shares" value={sharesText} onChange={(e) => setSharesText(e.target.value)} hint={`${formatUnits(remaining)} shares left at ${formatCents(price)} each.`} error={showProblem ? problem ?? undefined : undefined} className="max-w-form" />
         )}
         <p className="num mt-5 font-serif text-xl" aria-live="polite">
           {units !== null && cost !== null && units > 0n ? (
@@ -76,12 +84,12 @@ export function InvestForm(props: Props) {
         </p>
         {capped && mode === "dollars" && !problem ? <p className="mt-2 text-sm text-notice">Only {formatUnits(remaining)} shares are left, so this buys all of them for {formatCents(cost!)}.</p> : null}
         {!problem ? null : !showProblem ? <p className="mt-2 text-xs text-stone">{mode === "dollars" ? "Enter an amount to continue." : "Enter a number of shares to continue."}</p> : null}
-        <Button size="lg" className="mt-6 w-full sm:w-auto" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
+        <Button ref={reviewBtn} size="lg" className="mt-6 w-full sm:w-auto" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
       </div>
 
       {review && units !== null && cost !== null ? (
         <div className="max-w-form">
-          <p className="label mb-2">Review your order</p>
+          <h2 ref={reviewHeading} tabIndex={-1} className="mb-3 text-lg focus:outline-none">Review your order</h2>
           <Facts rows={[
             { label: "Property", value: props.propertyName },
             { label: "Shares", value: formatUnits(units, 6) },
@@ -95,7 +103,7 @@ export function InvestForm(props: Props) {
           </Note>
           <div className="mt-6 flex flex-wrap gap-3">
             <Submit size="lg" pendingLabel="Placing order…">Confirm purchase</Submit>
-            <Button size="lg" variant="secondary" onClick={() => setReview(false)}>Change</Button>
+            <Button size="lg" variant="secondary" className="w-full sm:w-auto" onClick={() => setReview(false)}>Change</Button>
           </div>
         </div>
       ) : null}

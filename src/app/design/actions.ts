@@ -15,3 +15,8 @@ export async function demoAction(_prev: ActionState, formData: FormData): Promis
   }
   return { ok: true, message: "Saved. (Demo form: nothing was stored.)" };
 }
+
+/** Demo for the confirm dialog on /design: does nothing and says so. */
+export async function demoConfirmAction(): Promise<{ ok: boolean; message?: string }> {
+  return { ok: true, message: "Demo only: nothing was paid." };
+}

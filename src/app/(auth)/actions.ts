@@ -8,6 +8,7 @@ import { BRAND } from "@/config/brand";
 import type { ActionState } from "@/components/ui/form";
 import { formObject, guard, zodFailure } from "@/lib/action";
 import { hashPassword, passwordSchema, signIn, signOut } from "@/lib/auth";
+import { safeNext } from "@/lib/session";
 import { appUrl } from "@/lib/app-url";
 import { prisma } from "@/lib/db";
 import { providers } from "@/lib/providers";
@@ -17,9 +18,9 @@ import { getSettings } from "@/lib/settings";
 
 const emailSchema = z.email("Enter a valid email address.").max(254).transform((e) => e.toLowerCase().trim());
 
-async function signInOrMessage(email: string, password: string): Promise<ActionState> {
+async function signInOrMessage(email: string, password: string, next = "/start"): Promise<ActionState> {
   try {
-    await signIn("credentials", { email, password, redirectTo: "/start" });
+    await signIn("credentials", { email, password, redirectTo: next });
     return { ok: true };
   } catch (e) {
     if (e instanceof AuthError) {
@@ -52,9 +53,9 @@ export async function signUpAction(_prev: ActionState, fd: FormData): Promise<Ac
 }
 
 export async function logInAction(_prev: ActionState, fd: FormData): Promise<ActionState> {
-  const parsed = z.object({ email: emailSchema, password: z.string().min(1, "Enter your password.").max(200) }).safeParse(formObject(fd));
+  const parsed = z.object({ email: emailSchema, password: z.string().min(1, "Enter your password.").max(200), next: z.string().max(300).optional() }).safeParse(formObject(fd));
   if (!parsed.success) return zodFailure(parsed.error);
-  return signInOrMessage(parsed.data.email, parsed.data.password);
+  return signInOrMessage(parsed.data.email, parsed.data.password, safeNext(parsed.data.next) ? parsed.data.next : "/start");
 }
 
 export async function signOutAction(): Promise<void> {

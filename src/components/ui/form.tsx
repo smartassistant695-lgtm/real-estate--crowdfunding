@@ -189,15 +189,19 @@ export function Select({ label, hint, error, className, children, ...rest }: Fie
   );
 }
 
-export function Checkbox({ label, className, ...rest }: { label: ReactNode; className?: string } & ComponentProps<"input">) {
+export function Checkbox({ label, className, error, ...rest }: { label: ReactNode; className?: string; error?: string } & ComponentProps<"input">) {
   const auto = useId();
   const id = rest.id ?? auto;
+  const err = useFieldError(rest.name, error);
   return (
-    <div className={cn("flex items-start gap-3", className)}>
-      <input id={id} type="checkbox" className="mt-1 size-4 shrink-0 accent-accent" {...rest} />
-      <label htmlFor={id} className="text-sm text-ink">
-        {label}
-      </label>
+    <div className={className}>
+      <div className="flex items-start gap-3">
+        <input id={id} type="checkbox" aria-invalid={err ? true : undefined} aria-describedby={err ? `${id}-error` : undefined} className="mt-1 size-4 shrink-0 accent-accent" {...rest} />
+        <label htmlFor={id} className="text-sm text-ink">
+          {label}
+        </label>
+      </div>
+      {err ? <p id={`${id}-error`} role="alert" className="mt-1 pl-7 text-xs text-loss">{err}</p> : null}
     </div>
   );
 }

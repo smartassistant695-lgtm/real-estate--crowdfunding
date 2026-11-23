@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ActionForm, Input, Submit, type FormAction } from "@/components/ui/form";
 import { Facts, Note } from "@/components/ui/primitives";
@@ -43,6 +43,14 @@ export function OrderForm(p: Props) {
   else if (side === "BUY" && total !== null && total > available) problem = `This needs ${formatCents(total)} set aside; you have ${formatCents(available)} available.`;
   else if (side === "SELL" && units > sellable) problem = `You can sell up to ${formatUnits(sellable)} shares right now.`;
 
+  const reviewHeading = useRef<HTMLHeadingElement>(null);
+  const reviewBtn = useRef<HTMLButtonElement>(null);
+  const firstRender = useRef(true);
+  useEffect(() => {
+    if (firstRender.current) { firstRender.current = false; return; }
+    (review ? reviewHeading.current : reviewBtn.current)?.focus();
+  }, [review]);
+
   const wouldMatch =
     priceCents !== null && ((side === "BUY" && p.bestAskCents && priceCents >= BigInt(p.bestAskCents)) || (side === "SELL" && p.bestBidCents && priceCents <= BigInt(p.bestBidCents)));
 
@@ -60,19 +68,19 @@ export function OrderForm(p: Props) {
         </div>
         <div className="grid grid-cols-2 gap-4">
           <Input label="Your price per share" name="price" inputMode="decimal" prefix="$" value={price} onChange={(e) => setPrice(e.target.value)} hint={`Appraised ${formatCents(nav)}`} error={problem && (problem.startsWith("Price") || problem.startsWith("Enter a price")) ? problem : undefined} />
-          <Input label="Shares" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={side === "SELL" ? `${formatUnits(sellable)} sellable` : "Steps of 0.01"} error={problem && qty && !problem.startsWith("Price") ? problem : undefined} />
+          <Input label="Shares" name="shares" inputMode="decimal" value={qty} onChange={(e) => setQty(e.target.value)} hint={side === "SELL" ? `${formatUnits(sellable)} sellable` : "Steps of 0.01"} error={problem && qty && !problem.startsWith("Price") && !problem.startsWith("Enter a price") ? problem : undefined} />
         </div>
         <p className="num mt-4 text-sm" aria-live="polite">
           {total !== null && units !== null && units > 0n ? (side === "BUY" ? <>Up to <strong className="font-medium">{formatCents(total)}</strong> will be set aside from your cash.</> : <>You would receive about <strong className="font-medium">{formatCents(total)}</strong> if it all sells at your price.</>) : <span className="text-stone">Enter a price and quantity.</span>}
         </p>
         
-        <Button size="lg" className="mt-5 w-full" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
+        <Button ref={reviewBtn} size="lg" className="mt-5 w-full" disabled={!!problem} onClick={() => setReview(true)}>Review order</Button>
         {problem && !qty ? <p className="mt-2 text-xs text-stone">Enter how many shares to continue.</p> : null}
       </div>
 
       {review && priceCents !== null && units !== null && total !== null ? (
         <div>
-          <p className="label mb-2">Review your order</p>
+          <h2 ref={reviewHeading} tabIndex={-1} className="mb-3 text-lg focus:outline-none">Review your order</h2>
           <Facts rows={[
             { label: "Order", value: `${side === "BUY" ? "Buy" : "Sell"} ${formatUnits(units)} shares` },
             { label: "Property", value: p.propertyName },

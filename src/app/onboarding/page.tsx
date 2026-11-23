@@ -66,7 +66,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
               ]} />
               {kyc === "limit" ? <Note tone="loss" className="mt-6">Too many attempts. Please try again in an hour.</Note> : null}
               <form action={startKycAction} className="mt-8">
-                <Button type="submit" size="lg">Verify my identity</Button>
+                <Button type="submit" className="w-full sm:w-auto" size="lg">Verify my identity</Button>
               </form>
               <p className="mt-4 text-xs text-stone">Demo tip: an email address containing “+reject@” is always rejected, so you can see that path.</p>
             </>
@@ -78,7 +78,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
                 The details you gave did not match our records, so you cannot invest yet. This does not affect your credit. If you think this is a mistake, check your details and try again, or contact support.
               </Note>
               <form action={retryKycAction} className="mt-6">
-                <Button type="submit" variant="secondary">Try again</Button>
+                <Button type="submit" className="w-full sm:w-auto" variant="secondary">Try again</Button>
               </form>
             </>
           ) : null}
@@ -101,7 +101,7 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <p className="mb-8 mt-3 max-w-prose text-ink-soft">Your wallet holds cash until you invest it, and receives your dividends. The smallest investment is $26.</p>
           <FundForm action={fundWalletAction} />
           <form action={skipFundingAction} className="mt-6">
-            <button type="submit" className="text-sm text-ink-soft underline decoration-rule underline-offset-4 hover:text-ink">Skip for now</button>
+            <button type="submit" className="text-sm text-ink-soft underline decoration-edge underline-offset-4 hover:text-ink">Skip for now</button>
           </form>
         </section>
       ) : null}
@@ -130,10 +130,10 @@ export default async function OnboardingPage({ searchParams }: { searchParams: P
           <div className="mt-8 flex flex-wrap gap-3">
             <form action={finishOnboardingAction}>
               <input type="hidden" name="to" value="properties" />
-              <Button type="submit" size="lg">Browse properties</Button>
+              <Button type="submit" className="w-full sm:w-auto" size="lg">Browse properties</Button>
             </form>
             <form action={finishOnboardingAction}>
-              <Button type="submit" size="lg" variant="secondary">Go to my portfolio</Button>
+              <Button type="submit" className="w-full sm:w-auto" size="lg" variant="secondary">Go to my portfolio</Button>
             </form>
           </div>
         </section>

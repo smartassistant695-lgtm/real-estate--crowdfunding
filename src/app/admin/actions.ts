@@ -47,10 +47,10 @@ const propertySchema = z.object({
   schoolsNote: z.string().trim().max(300),
   transitNote: z.string().trim().max(300),
   risks: z.string().transform((s) => s.split("\n").map((l) => l.replace(/^[-–•]\s*/, "").trim()).filter(Boolean)).refine((r) => r.length >= 1 && r.length <= 8, "List one to eight risks, one per line."),
-  purchasePrice: dollars(),
+  purchasePrice: dollars().refine((c) => c > 0n, "Enter the purchase price."),
   closingCosts: dollars(),
   reserveFund: dollars(),
-  offeringPrice: dollars(),
+  offeringPrice: dollars().refine((c) => c > 0n, "Enter a share price above $0."),
   projectedRent: dollars(),
   projectedYield: percent(),
   fundingDeadline: z.string().optional().transform((s, ctx) => {

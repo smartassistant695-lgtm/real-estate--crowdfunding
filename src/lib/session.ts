@@ -1,4 +1,5 @@
 import "server-only";
+import { headers } from "next/headers";
 import { notFound, redirect } from "next/navigation";
 import { cache } from "react";
 import { auth } from "@/lib/auth";
@@ -22,7 +23,10 @@ export type SessionUser = NonNullable<Awaited<ReturnType<typeof currentUser>>>;
 
 export async function requireUser(): Promise<SessionUser> {
   const user = await currentUser();
-  if (!user) redirect("/login");
+  if (!user) {
+    const here = (await headers()).get("x-pathname");
+    redirect(here && safeNext(here) ? `/login?next=${encodeURIComponent(here)}` : "/login");
+  }
   return user;
 }
 
@@ -49,4 +53,9 @@ export function onboardingStep(user: SessionUser): "profile" | "identity" | "dis
   if (!user.fundedAt && !user.onboardingCompletedAt) return "fund";
   if (!user.onboardingCompletedAt) return "tour";
   return "done";
+}
+
+/** Only same-site paths may be used as a post-login destination (no "//host" or "/\\host"). */
+export function safeNext(path: string | null | undefined): path is string {
+  return !!path && path.startsWith("/") && !path.startsWith("//") && !path.startsWith("/\\") && path.length <= 300 && !path.startsWith("/login");
 }

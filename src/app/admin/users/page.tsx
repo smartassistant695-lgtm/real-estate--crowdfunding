@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input, Select } from "@/components/ui/form";
-import { Badge, PageHeader, Table, Td, Th } from "@/components/ui/primitives";
+import { Badge, Empty, PageHeader, Table, Td, Th } from "@/components/ui/primitives";
 import { prisma } from "@/lib/db";
 import { formatCents } from "@/lib/domain/money";
 import { fmtDate } from "@/lib/labels";
@@ -33,7 +33,8 @@ export default async function AdminUsers({ searchParams }: { searchParams: Promi
         </Select>
         <Button type="submit" variant="secondary">Filter</Button>
       </form>
-      <Table caption="Investors" className="mt-4">
+      {users.length === 0 ? <Empty title="No investors match." action={<Link className="link" href="/admin/users">Clear the search</Link>}>Search looks at names and email addresses.</Empty> : null}
+      <Table caption="Investors" className={users.length === 0 ? "hidden" : "mt-4"}>
         <thead><tr><Th>Investor</Th><Th>Identity</Th><Th num>Cash</Th><Th num>Properties</Th><Th num>Annual limit</Th><Th>Joined</Th></tr></thead>
         <tbody>
           {users.map((u) => (

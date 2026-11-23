@@ -144,14 +144,14 @@ All in `src/components/ui` and `src/components/site`. Shown together at `/design
 | Stat | `.label` over a serif figure; optional note |
 | Facts | Key–value rows for fact sheets and order reviews |
 | Badge | Small-caps text in a 1px outline; `solid` only for "open now" states |
-| Tabs | Links with URLs; 2px ink underline on the active tab |
+| Tabs and navigation | Links with URLs; the current page is marked with `aria-current` and a 2px ink underline (header) or a 2px ink left rule on `paper-deep` (admin sidebar) |
 | Note | Neutral: 2px ink rule on the left, no fill. Caution / problem: 1px top and bottom rule in the tone colour over its wash, led by the tone word (`Caution`, `Problem`) as a `.label`. **Never a coloured left bar on a filled box.** Form results use the same pattern (`Problem`, `Done`) |
 | Stepper | "Step 2 of 5" `.label` over a ruled row; done and current steps have a 2px ink top rule |
 | Meter | 8px `paper-deep` track, `accent` fill. Threshold ticks are 2px ink with a text label under them ("Quorum 30%"). Tally segments: For = `accent`, Against = `ink`, Abstain = `stone`, separated by a 1px gap. Never gain/loss colours. The figure is always printed as text too. Used for funding, quorum and vote tallies |
 | SegmentedToggle | Buy/Sell, grid/list, dollars/shares: 40px tall, ink border, selected = ink fill with paper text, `aria-pressed` or links with `aria-current`. Buy/Sell are never green/red |
 | Pagination | Links (`?page=`): "Newer · Page 2 of 8 · Older", `.num`, works without JavaScript |
 | FilterBar | A GET form above its table; one row of controls; an Apply button so it works without JavaScript |
-| Admin form | From `md`: label column `grid-cols-[12rem_1fr]`; fieldsets under a SectionHeading; actions left-aligned, primary first, then a quiet Cancel |
+| Admin form | Fieldsets under a SectionHeading; labels above fields in a two-column field grid from `md` (dense data entry, scanned top to bottom); actions left-aligned, primary first, then a quiet Cancel |
 | Dense table (admin) | 4px vertical padding, row hover `paper-deep`, row actions as quiet `sm` buttons on the right |
 | Confirm dialog | Every irreversible or money-moving admin action (pay, cancel, close vote, record sale, delete) opens a Dialog whose title states the action and the figure ("Pay $4,213.50 to 21 investors?"), a primary or danger button with a verb, and a secondary "Keep draft"/"Cancel" |
 | Notification row | 8px accent dot with sr-only "Unread", title in weight 500, body in `ink-soft`, grouped under date labels |
@@ -172,7 +172,7 @@ All in `src/components/ui` and `src/components/site`. Shown together at `/design
 | Error | Inline under the field (`loss`, `role="alert"`, `aria-invalid`, `aria-describedby`), plus a `Problem` note unless it would repeat the field message. What the person typed stays in place. Plain sentences, never the validator's wording. Never only a toast |
 | Loading | Pending label on the button ("Placing order…"); text in `stone` ("Loading orders…") or a static `paper-deep` block. No spinners, no shimmer |
 | Empty | The `Empty` component: one serif sentence, one line of context, at most one action |
-| Success | A short toast ("Order placed.") and the changed data visible on the page |
+| Success | A short toast ("Order placed.") and the changed data visible on the page. When success navigates to another page (a purchase lands on the portfolio), a confirmation note on that page replaces the toast |
 
 ---
 

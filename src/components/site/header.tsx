@@ -7,6 +7,7 @@ import { formatCents } from "@/lib/domain/money";
 import { currentUser } from "@/lib/session";
 import { signOutAction } from "@/app/(auth)/actions";
 import { MenuCloser } from "./menu-closer";
+import { NavLink } from "./nav-link";
 import { Wordmark } from "./wordmark";
 
 export function DemoBanner() {
@@ -49,16 +50,16 @@ export async function SiteHeader() {
   return (
     <header className="no-print border-b border-rule bg-paper">
       <MenuCloser />
-      <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-10 focus:z-50 focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:text-paper">
+      <a href="#main" className="on-ink sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-10 focus:z-50 focus:bg-ink focus:px-3 focus:py-2 focus:text-sm focus:text-paper">
         Skip to content
       </a>
       <div className="mx-auto flex h-16 max-w-page items-center gap-4 px-4 md:gap-6 md:px-8">
         <Wordmark />
         <nav aria-label="Main" className="ml-4 hidden items-center gap-6 md:flex">
           {nav.map((n) => (
-            <Link key={n.href} href={n.href} className={linkCls}>
+            <NavLink key={n.href} href={n.href} className={linkCls} exact={n.href === "/admin"}>
               {n.label}
-            </Link>
+            </NavLink>
           ))}
         </nav>
         <div className="ml-auto flex items-center gap-3 md:gap-4">

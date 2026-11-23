@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { NavLink } from "@/components/site/nav-link";
 import type { ReactNode } from "react";
 import { requireAdmin } from "@/lib/session";
 
@@ -26,7 +26,7 @@ export default async function AdminLayout({ children }: { children: ReactNode })
         <p className="label mb-3">Admin</p>
         <ul className="-mx-2 flex gap-1 overflow-x-auto pb-4 text-sm md:mx-0 md:-ml-2 md:flex-col md:pb-0">
           {NAV.map(([href, label]) => (
-            <li key={href}><Link href={href} className="flex h-11 items-center whitespace-nowrap px-2 text-ink-soft hover:bg-paper-deep hover:text-ink md:h-9">{label}</Link></li>
+            <li key={href}><NavLink href={href} exact={href === "/admin"} className="flex h-11 items-center whitespace-nowrap border-l-2 border-transparent px-2 text-ink-soft hover:bg-paper-deep hover:text-ink md:h-9" activeClassName="border-ink! bg-paper-deep text-ink">{label}</NavLink></li>
           ))}
         </ul>
       </nav>

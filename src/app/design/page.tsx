@@ -6,11 +6,11 @@ import { DemoActionForm, ToastDemo } from "@/components/marketing/design-demos";
 import { PropertyCard } from "@/components/site/property-card";
 import { Wordmark } from "@/components/site/wordmark";
 import { Button, ButtonLink } from "@/components/ui/button";
-import { Dialog } from "@/components/ui/dialog";
+import { ConfirmAction } from "@/components/ui/confirm-action";
 import { Checkbox, Input, Select, Textarea } from "@/components/ui/form";
 import { Badge, Empty, Facts, Meter, Money, Note, Page, PageHeader, SectionHeading, Stat, Stepper, Table, Tabs, Td, Th } from "@/components/ui/primitives";
 import { listPropertyCards } from "@/lib/queries";
-import { demoAction } from "./actions";
+import { demoAction, demoConfirmAction } from "./actions";
 
 export const metadata: Metadata = {
   title: "Design system",
@@ -320,9 +320,7 @@ export default async function DesignPage({ searchParams }: { searchParams: Promi
 
           <Block id="overlays" title="Dialog and toast">
             <div className="flex flex-wrap gap-4">
-              <Dialog trigger="Open a confirm dialog" title="Pay $4,213.50 to 21 investors?">
-                <p className="text-sm text-ink-soft">The October dividend for Kenwood Bungalow will be paid from its operating account. This cannot be undone. (Demo: nothing happens.)</p>
-              </Dialog>
+              <ConfirmAction action={demoConfirmAction} fields={{ demo: "1" }} trigger="Open a confirm dialog" title="Pay $4,213.50 to 21 investors?" body="The October dividend for Kenwood Bungalow will be paid from its operating account. This cannot be undone. (Demo: nothing happens.)" confirm="Pay $4,213.50" />
               <ToastDemo />
             </div>
           </Block>
