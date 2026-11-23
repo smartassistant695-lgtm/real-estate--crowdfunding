@@ -10,6 +10,12 @@ trading windows, and vote on major decisions about the homes they own.
 
 The brand name lives in one place: `src/config/brand.ts`.
 
+| Home (desktop) | Property fact sheet | Portfolio (phone) |
+|---|---|---|
+| ![Home](docs/screenshots/home-1440.png) | ![Property](docs/screenshots/property-1440.png) | ![Portfolio](docs/screenshots/portfolio-375.png) |
+
+More in [`docs/screenshots/`](docs/screenshots).
+
 ---
 
 ## Demo accounts
